@@ -51,7 +51,7 @@ export class MovieService {
       title: createMovieDto.title,
       genre: createMovieDto.genre,
       detail: {
-        detail: createMovieDto.detail
+        description: createMovieDto.description
       },
     });
 
@@ -68,20 +68,20 @@ export class MovieService {
       throw new NotFoundException("존재하지 않는 ID 값의 영화입니다.");
     }
 
-    const {detail, ...movieRest} = updateMovieDto;
+    const {description, ...movieRest} = updateMovieDto;
 
     await this.movieRepository.update(
       {id},
-      movieRest
+      movieRest,
     );
 
-    if(detail){
+    if(description){
       await this.movieDetailRepository.update(
         {
           id: movie.detail.id
         },
         {
-          detail
+          description
         }
       );
     }

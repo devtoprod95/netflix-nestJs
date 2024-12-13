@@ -7,7 +7,7 @@ export class MovieDetail {
     id: number;
 
     @Column()
-    detail: string;
+    description: string;
 
     @OneToOne(
         () => Movie,

@@ -33,7 +33,7 @@ export class UpdateMovieDto {
 
     @IsNotEmpty()
     @IsOptional()
-    detail: string;
+    description: string;
 
 
     // null || undefined
