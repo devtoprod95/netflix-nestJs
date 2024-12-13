@@ -1,33 +1,25 @@
-import { Exclude, Expose, Transform } from "class-transformer";
-import { Column, CreateDateColumn, Entity, PrimaryGeneratedColumn, UpdateDateColumn, VersionColumn } from "typeorm";
+import { Transform } from "class-transformer";
+import { Column, Entity, JoinColumn, OneToOne, PrimaryGeneratedColumn } from "typeorm";
+import { BaseTable } from "./base-table.entity";
+import { MovieDetail } from "./movie-detail.entity";
 
-@Exclude() // 제외
 @Entity()
-export class Movie {
-    @Expose()
+export class Movie extends BaseTable {
     @PrimaryGeneratedColumn()
     id: number;
 
-    @Expose()
     @Column()
     title: string;
 
-    @Expose()
     @Column()
     @Transform(
         ({value}) => value.toString().toUpperCase()
-    ) 
+    )
     genre: string;
 
-    @CreateDateColumn()
-    @Expose()
-    createdAt: Date;
-
-    @UpdateDateColumn()
-    @Expose()
-    updatedAt: Date;
-
-    @VersionColumn()
-    @Expose()
-    version: number;
+    @OneToOne(
+        () => MovieDetail
+    )
+    @JoinColumn()
+    detail: MovieDetail;
 }
