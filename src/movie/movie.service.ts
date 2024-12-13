@@ -66,7 +66,7 @@ export class MovieService {
       throw new NotFoundException("존재하지 않는 ID 값의 영화입니다.");
     }
 
-    Object.assign(movie, {title: updateMovieDto.title, genre: updateMovieDto.genre});
+    Object.assign(movie, updateMovieDto);
 
     return movie;
   }
