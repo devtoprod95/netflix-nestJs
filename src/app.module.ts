@@ -1,7 +1,49 @@
 import { Module } from '@nestjs/common';
 import { MovieModule } from './movie/movie.module';
+import { TypeOrmModule } from '@nestjs/typeorm';
+import { ConfigModule, ConfigService } from '@nestjs/config';
+import * as Joi from 'joi';
 
 @Module({
-  imports: [MovieModule],
+  imports: [
+    ConfigModule.forRoot({
+      isGlobal: true, // 다른 모듈에서도 사용가능한 옵션
+      validationSchema: Joi.object({
+        ENV: Joi.string().valid('dev', 'production').required(),
+        DB_TYPE: Joi.string().valid('postgres').required(),
+        DB_HOST: Joi.string().required(),
+        DB_PORT: Joi.string().required(),
+        DB_USERNAME: Joi.string().required(),
+        DB_PASSWORD: Joi.string().required(),
+        DB_DATABASE: Joi.string().required(),
+      }),
+    }),
+    // forRootAsync는 비동기로 설정하며 ConfigModule가 완료되었을 때 실행되게 설정
+    TypeOrmModule.forRootAsync({
+      useFactory:(configService: ConfigService) => ({
+        type: configService.get<string>('DB_TYPE') as 'postgres',
+        host: configService.get<string>('DB_HOST'),
+        port: configService.get<number>('DB_PORT'),
+        username: configService.get<string>('DB_USERNAME'),
+        password: configService.get<string>('DB_PASSWORD'),
+        database: configService.get<string>('DB_DATABASE'),
+        entities: [],
+        synchronize: true,
+      }),
+      inject: [ConfigService]
+    }),
+    // Joi를 안쓰는 일반 설정일 경우
+    // TypeOrmModule.forRoot({
+    //   type: process.env.DB_TYPE as 'postgres',
+    //   host: process.env.DB_HOST,
+    //   port: parseInt(process.env.DB_PORT),
+    //   username: process.env.DB_USERNAME,
+    //   password: process.env.DB_PASSWORD,
+    //   database: process.env.DB_DATABASE,
+    //   entities: [],
+    //   synchronize: true,
+    // }),
+    MovieModule
+  ],
 })
 export class AppModule {}
