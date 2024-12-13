@@ -38,6 +38,6 @@ export class UpdateMovieDto {
     // @IsIn(['a', 'b'])
     // @IsNotIn(['a', 'b'])
     // @Validate(PasswordValidator)
-    @IsPasswordValid()
-    test: string;
+    // @IsPasswordValid()
+    // test: string;
 }
