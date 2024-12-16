@@ -12,6 +12,7 @@ import { Genre } from './genre/entity/genre.entity';
 import { AuthModule } from './auth/auth.module';
 import { UserModule } from './user/user.module';
 import { User } from './user/entity/user.entity';
+import { envVariableKeys } from './common/const/env.const';
 
 @Module({
   imports: [
@@ -33,12 +34,12 @@ import { User } from './user/entity/user.entity';
     // forRootAsync는 비동기로 설정하며 ConfigModule가 완료되었을 때 실행되게 설정
     TypeOrmModule.forRootAsync({
       useFactory:(configService: ConfigService) => ({
-        type: configService.get<string>('DB_TYPE') as 'postgres',
-        host: configService.get<string>('DB_HOST'),
-        port: configService.get<number>('DB_PORT'),
-        username: configService.get<string>('DB_USERNAME'),
-        password: configService.get<string>('DB_PASSWORD'),
-        database: configService.get<string>('DB_DATABASE'),
+        type: configService.get<string>(envVariableKeys.DB_TYPE) as 'postgres',
+        host: configService.get<string>(envVariableKeys.DB_HOST),
+        port: configService.get<number>(envVariableKeys.DB_PORT),
+        username: configService.get<string>(envVariableKeys.DB_USERNAME),
+        password: configService.get<string>(envVariableKeys.DB_PASSWORD),
+        database: configService.get<string>(envVariableKeys.DB_DATABASE),
         entities: [
           Movie,
           MovieDetail,
