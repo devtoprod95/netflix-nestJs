@@ -1,7 +1,7 @@
-import { ClassSerializerInterceptor, Controller, Headers, Post, Request, UseGuards, UseInterceptors } from '@nestjs/common';
+import { ClassSerializerInterceptor, Controller, Get, Headers, Post, Request, UseGuards, UseInterceptors } from '@nestjs/common';
 import { AuthService } from './auth.service';
-import { AuthGuard } from '@nestjs/passport';
 import { LocalAuthGuard } from './strategy/local.strategy';
+import { JwtAuthGuard } from './strategy/jwt.strategy';
 
 @Controller('auth')
 @UseInterceptors(ClassSerializerInterceptor)
@@ -20,7 +20,17 @@ export class AuthController {
 
   @UseGuards(LocalAuthGuard)
   @Post('login/passport-local')
-  loginUserPassportLocal(@Request() req){
+  async loginUserPassportLocal(@Request() req){
+    return {
+      user: req.user.userInfo,
+      refreshToken: req.user.refreshToken,
+      accessToken: req.user.accessToken,
+    }
+  }
+
+  @UseGuards(JwtAuthGuard)
+  @Get('login/passport-jwt')
+  async private(@Request() req){
     return req.user;
   }
 }
