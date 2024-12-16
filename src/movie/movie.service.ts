@@ -23,26 +23,25 @@ export class MovieService {
   ){}
 
   async findAll(title: string) {
+    const qb = await this.movieRepository.createQueryBuilder('movie')
+    .leftJoinAndSelect('movie.detail', 'detail')
+    .leftJoinAndSelect('movie.director', 'director')
+    .leftJoinAndSelect('movie.genres', 'genres');
 
-    if(!title){
-      return await this.movieRepository.find({ 
-        relations: ['detail', 'director', 'genres']
-      });  
+    if(title){
+      qb.where('movie.title LIKE :title', {title: `%${title}%`});
     }
 
-    return await this.movieRepository.find({
-      where: {
-        title: Like(`%${title}%`)
-      },
-      relations: ['detail', 'director', 'genres']
-    });
+    return qb.getManyAndCount();
   }
 
   async findOne(id: number) {
-    const movie = await this.movieRepository.findOne({
-      where: {id},
-      relations: ['detail', 'director', 'genres']
-    });
+    const movie = await this.movieRepository.createQueryBuilder('movie')
+    .leftJoinAndSelect('movie.detail', 'detail')
+    .leftJoinAndSelect('movie.director', 'director')
+    .leftJoinAndSelect('movie.genres', 'genres')
+    .where('movie.id = :id', {id})
+    .getOne();
 
     if(!movie) {
       throw new NotFoundException("존재하지 않는 ID 값의 영화입니다.");
