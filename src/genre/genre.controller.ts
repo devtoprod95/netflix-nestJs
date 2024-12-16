@@ -1,9 +1,10 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete, Query } from '@nestjs/common';
+import { Controller, Get, Post, Body, Patch, Param, Delete, Query, UseInterceptors, ClassSerializerInterceptor, ParseIntPipe } from '@nestjs/common';
 import { GenreService } from './genre.service';
 import { CreateGenreDto } from './dto/create-genre.dto';
 import { UpdateGenreDto } from './dto/update-genre.dto';
 
 @Controller('genre')
+@UseInterceptors(ClassSerializerInterceptor)
 export class GenreController {
   constructor(private readonly genreService: GenreService) {}
 
@@ -15,8 +16,8 @@ export class GenreController {
   }
 
   @Get(':id')
-  getMovie(@Param('id') id: string) {
-    return this.genreService.findOne(+id)
+  getMovie(@Param('id', ParseIntPipe) id: number) {
+    return this.genreService.findOne(id)
   }
 
   @Post()
@@ -28,16 +29,16 @@ export class GenreController {
 
   @Patch(':id')
   patchMovie(
-    @Param('id') id: string,
+    @Param('id', ParseIntPipe) id: number,
     @Body() body: UpdateGenreDto
   ) {
-    return this.genreService.update(+id, body);
+    return this.genreService.update(id, body);
   }
 
   @Delete(':id')
   deleteMovie(
-    @Param('id') id: string
+    @Param('id', ParseIntPipe) id: number
   ) {
-    return this.genreService.remove(+id);
+    return this.genreService.remove(id);
   }
 }

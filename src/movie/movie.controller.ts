@@ -1,4 +1,4 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete, Query, UseInterceptors, ClassSerializerInterceptor } from '@nestjs/common';
+import { Controller, Get, Post, Body, Patch, Param, Delete, Query, UseInterceptors, ClassSerializerInterceptor, ParseIntPipe, BadRequestException } from '@nestjs/common';
 import { MovieService } from './movie.service';
 import { CreateMovieDto } from './dto/create-movie.dto';
 import { UpdateMovieDto } from './dto/update-movie.dto';
@@ -16,8 +16,12 @@ export class MovieController {
   }
 
   @Get(':id')
-  getMovie(@Param('id') id: string) {
-    return this.movieService.findOne(+id)
+  getMovie(@Param('id', new ParseIntPipe({
+    exceptionFactory(error) {
+      throw new BadRequestException('숫자를 입력하세요.');
+    }
+  })) id: number) {
+    return this.movieService.findOne(id)
   }
 
   @Post()
@@ -29,16 +33,16 @@ export class MovieController {
 
   @Patch(':id')
   patchMovie(
-    @Param('id') id: string,
+    @Param('id', ParseIntPipe) id: number,
     @Body() body: UpdateMovieDto
   ) {
-    return this.movieService.update(+id, body);
+    return this.movieService.update(id, body);
   }
 
   @Delete(':id')
   deleteMovie(
-    @Param('id') id: string
+    @Param('id', ParseIntPipe) id: number
   ) {
-    return this.movieService.remove(+id);
+    return this.movieService.remove(id);
   }
 }
