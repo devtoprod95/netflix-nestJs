@@ -119,77 +119,89 @@ export class MovieService {
   }
 
   async update(id: number, updateMovieDto: UpdateMovieDto) {
-    const movie = await this.movieRepository.findOne({
-      where: {id},
-      relations: ['detail']
-    });
-    if(!movie) {
-      throw new NotFoundException("존재하지 않는 ID 값의 영화입니다.");
-    }
+    const qr = this.dataSource.createQueryRunner();
+    await qr.connect();
+    await qr.startTransaction();
 
-    const {description, directorId, genreIds, ...movieRest} = updateMovieDto;
-
-    let newDirector;
-    if( directorId ){
-      const director = await this.directorRepository.findOne({
-        where: {
-          id: directorId
-        }
+    try {
+      const movie = await qr.manager.findOne(Movie, {
+        where: {id},
+        relations: ['detail', 'genres']
       });
+      if(!movie) {
+        throw new NotFoundException("존재하지 않는 ID 값의 영화입니다.");
+      }
   
-      if( !director ){
-        throw new NotFoundException("존재하지 않는 감독 ID입니다.");
+      const {description, directorId, genreIds, ...movieRest} = updateMovieDto;
+  
+      let newDirector;
+      if( directorId ){
+        const director = await qr.manager.findOne(MovieDetail, {
+          where: {
+            id: directorId
+          }
+        });
+    
+        if( !director ){
+          throw new NotFoundException("존재하지 않는 감독 ID입니다.");
+        }
+  
+        newDirector = director;
+      }
+  
+      let newGenres;
+      if(genreIds){
+        const genres = await qr.manager.find(Genre, {
+          where: {
+            id: In(updateMovieDto.genreIds)
+          }
+        });
+        if( genres.length !== updateMovieDto.genreIds.length ){
+          throw new NotFoundException(`존재하지 않는 장르가 있습니다. 존재하는 ids -> ${genres.map(genre => genre.id).join(',')}`);
+        }
+  
+        newGenres = genres;
+      }
+  
+      const movieUpdaetFields = {
+        ...movieRest,
+        ...(newDirector && { director: newDirector })
+      };
+      await qr.manager.createQueryBuilder()
+      .update(Movie)
+      .set(movieUpdaetFields)
+      .where('id = :id', { id })
+      .execute()
+  
+      if(description) {
+        await qr.manager.createQueryBuilder()
+        .update(MovieDetail)
+        .set({
+          description: description
+        })
+        .where('id = :id', {id: movie.detail.id})
+        .execute();
       }
 
-      newDirector = director;
-    }
+      if(newGenres) {
+        await qr.manager.createQueryBuilder()
+          .relation(Movie, 'genres')
+          .of(id)
+          .addAndRemove(newGenres.map(genre => genre.id), movie.genres.map(genre => genre.id));
+      }
+      await qr.commitTransaction();
 
-    let newGenres;
-    if(genreIds){
-      const genres = await this.genreRepository.find({
-        where: {
-          id: In(updateMovieDto.genreIds)
-        }
+      return this.movieRepository.findOne({
+        where: {id},
+        relations: ['detail', 'director', 'genres']
       });
-      if( genres.length !== updateMovieDto.genreIds.length ){
-        throw new NotFoundException(`존재하지 않는 장르가 있습니다. 존재하는 ids -> ${genres.map(genre => genre.id).join(',')}`);
-      }
-
-      newGenres = genres;
+    } catch (e) {
+      await qr.rollbackTransaction();
+      throw e;
+    } finally {
+      await qr.release();
     }
 
-    const moveUpdaetFields = {
-      ...movieRest,
-      ...(newDirector && { director: newDirector })
-    };
-    await this.movieRepository.update(
-      {id},
-      moveUpdaetFields,
-    );
-
-    if(description){
-      await this.movieDetailRepository.update(
-        {
-          id: movie.detail.id
-        },
-        {
-          description
-        }
-      );
-    }
-
-    const newMovie = await this.movieRepository.findOne({
-      where: {id},
-      relations: ['detail', 'director', 'genres']
-    });
-
-    newMovie.genres = newGenres;
-    await this.movieRepository.save(newMovie);
-
-    return this.movieRepository.findOne({
-      where: {id},
-      relations: ['detail', 'director', 'genres']
-    });
   }
 
   async remove(id: number) {
