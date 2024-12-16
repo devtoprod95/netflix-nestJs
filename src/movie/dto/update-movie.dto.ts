@@ -35,6 +35,9 @@ export class UpdateMovieDto {
     @IsOptional()
     description: string;
 
+    @IsNotEmpty()
+    @IsOptional()
+    directorId: number;
 
     // null || undefined
     // @IsDefined()

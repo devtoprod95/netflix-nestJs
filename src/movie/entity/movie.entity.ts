@@ -30,7 +30,10 @@ export class Movie extends BaseTable {
 
     @ManyToOne(
         () => Director,
-        director => director.id
+        director => director.id,
+        {
+            cascade: true
+        }
     )
     director: Director
 }
