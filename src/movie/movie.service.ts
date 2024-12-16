@@ -22,7 +22,7 @@ export class MovieService {
   async findAll(title: string) {
 
     if(!title){
-      return await this.movieRepository.find({
+      return await this.movieRepository.find({ 
         relations: ['detail', 'director']
       });  
     }

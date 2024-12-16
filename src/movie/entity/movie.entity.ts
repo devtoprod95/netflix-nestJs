@@ -1,8 +1,9 @@
 import { Transform } from "class-transformer";
-import { Column, Entity, JoinColumn, ManyToOne, OneToOne, PrimaryGeneratedColumn } from "typeorm";
+import { Column, Entity, JoinColumn, JoinTable, ManyToMany, ManyToOne, OneToOne, PrimaryGeneratedColumn } from "typeorm";
 import { BaseTable } from "../../common/entity/base-table.entity";
 import { MovieDetail } from "./movie-detail.entity";
 import { Director } from "src/director/entity/director.entity";
+import { Genre } from "src/genre/entity/genre.entity";
 
 @Entity()
 export class Movie extends BaseTable {
@@ -14,11 +15,12 @@ export class Movie extends BaseTable {
     })
     title: string;
 
-    @Column()
-    @Transform(
-        ({value}) => value.toString().toUpperCase()
+    @ManyToMany(
+        () => Genre,
+        genre => genre.movies,
     )
-    genre: string;
+    @JoinTable()
+    genres: Genre[];
 
     @OneToOne(
         () => MovieDetail,
@@ -39,5 +41,6 @@ export class Movie extends BaseTable {
             nullable: false,
         }
     )
+    @JoinColumn()
     director: Director
 }

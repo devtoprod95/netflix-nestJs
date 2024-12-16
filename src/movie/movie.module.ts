@@ -11,7 +11,7 @@ import { Director } from 'src/director/entity/director.entity';
     TypeOrmModule.forFeature([
       Movie,
       MovieDetail,
-      Director
+      Director,
     ]),
   ],
   controllers: [MovieController],
