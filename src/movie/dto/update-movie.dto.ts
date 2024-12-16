@@ -1,4 +1,4 @@
-import { IsNotEmpty, IsOptional, registerDecorator, Validate, ValidationArguments, ValidationOptions, ValidatorConstraint, ValidatorConstraintInterface } from "class-validator";
+import { ArrayNotEmpty, IsArray, IsNotEmpty, IsNumber, IsOptional, IsString, registerDecorator, Validate, ValidationArguments, ValidationOptions, ValidatorConstraint, ValidatorConstraintInterface } from "class-validator";
 
 @ValidatorConstraint()
 class PasswordValidator implements ValidatorConstraintInterface {
@@ -25,19 +25,26 @@ function IsPasswordValid(validationOptions?: ValidationOptions) {
 export class UpdateMovieDto {
     @IsNotEmpty()
     @IsOptional()
+    @IsString()
     title: string;
 
     @IsNotEmpty()
     @IsOptional()
-    genre: string;
-
-    @IsNotEmpty()
-    @IsOptional()
+    @IsString()
     description: string;
 
     @IsNotEmpty()
     @IsOptional()
+    @IsNumber()
     directorId: number;
+
+    @IsArray()
+    @ArrayNotEmpty()
+    @IsOptional()
+    @IsNumber({}, {
+        each: true,
+    })
+    genreIds: number[];
 
     // null || undefined
     // @IsDefined()
