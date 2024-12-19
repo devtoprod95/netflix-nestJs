@@ -2,17 +2,20 @@ import { ClassSerializerInterceptor, Controller, Get, Headers, Post, Request, Us
 import { AuthService } from './auth.service';
 import { LocalAuthGuard } from './strategy/local.strategy';
 import { JwtAuthGuard } from './strategy/jwt.strategy';
+import { Public } from './decorator/public.decorator';
 
 @Controller('auth')
 @UseInterceptors(ClassSerializerInterceptor)
 export class AuthController {
   constructor(private readonly authService: AuthService) {}
 
+  @Public()
   @Post('register')
   registerUser(@Headers('authorization') token: string){
     return this.authService.register(token);
   }
 
+  @Public()
   @Post('login')
   loginUser(@Headers('authorization') token: string){
     return this.authService.login(token);
