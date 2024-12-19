@@ -14,7 +14,7 @@ export class MovieController {
   constructor(private readonly movieService: MovieService) {}
 
   @Get()
-  @Public()
+  @RBAC(Role.user)
   getMovies(
     @Query('title', MovieTitleValidationPipe) title?: string,
   ) {
@@ -22,7 +22,7 @@ export class MovieController {
   }
 
   @Get(':id')
-  @RBAC(Role.admin)
+  @RBAC(Role.user)
   getMovie(@Param('id', new ParseIntPipe({
     exceptionFactory(error) {
       throw new BadRequestException('숫자를 입력하세요.');
@@ -32,7 +32,7 @@ export class MovieController {
   }
 
   @Post()
-  @RBAC(Role.user)
+  @RBAC(Role.admin)
   postMovie(
     @Body() body: CreateMovieDto
   ) {

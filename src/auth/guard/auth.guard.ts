@@ -9,12 +9,12 @@ export class AuthGuard implements CanActivate{
     ){}
 
     canActivate(context: ExecutionContext): boolean {
-        // public decoration이 있으면 bypass    
+        // public decoration이 있으면 bypass
+
         const isPublic = this.reflector.get(Public, context.getHandler());
         if(isPublic) return true;
 
         const request = context.switchToHttp().getRequest();
-
         if(!request.user || request.user.type !== 'access'){
             return false;
         }
