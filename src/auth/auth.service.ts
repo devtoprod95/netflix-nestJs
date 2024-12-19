@@ -38,40 +38,6 @@ export class AuthService {
         return {email, password};
     }
 
-    async parseBearerToken(rawToken: string, isRefreshToken: boolean){
-        const basicSplit = rawToken.split(" ");
-        if( basicSplit.length !== 2 ){
-            throw new BadRequestException('토큰 포맷이 잘못됐습니다.');
-        }
-
-        const [basic, token] = basicSplit;
-        if( basic.toLowerCase() !== 'bearer') {
-            throw new BadRequestException('토큰 포맷이 잘못됐습니다.');
-        }
-        
-        try {
-            const payload = await this.jwtService.verifyAsync(token, {
-                secret: this.configService.get<string>(
-                    isRefreshToken ? envVariableKeys.REFRESH_TOKEN_SECRET : envVariableKeys.ACCESS_TOKEN_SECRET
-                ),
-            });
-
-            if(isRefreshToken){
-                if( payload.type !== 'refresh' ){
-                    throw new BadRequestException('Refresh 토큰을 입력해주세요.');
-                }
-            } else {
-                if( payload.type !== 'access' ){
-                    throw new BadRequestException('Access 토큰을 입력해주세요.');
-                }
-            }
-    
-            return payload;
-        } catch (error) {
-            throw new UnauthorizedException('토큰이 만료되었습니다.');
-        }
-    }
-
     async register(rawToken: string){
         const {email, password} = this.parseBasicToken(rawToken);
 
