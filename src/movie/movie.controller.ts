@@ -7,6 +7,7 @@ import { AuthGuard } from 'src/auth/guard/auth.guard';
 import { Public } from 'src/auth/decorator/public.decorator';
 import { RBAC } from 'src/auth/decorator/rbac.decorator';
 import { Role } from 'src/user/entity/user.entity';
+import { GetMoviesDto } from './dto/get-movies.dto';
 
 @Controller('movie')
 @UseInterceptors(ClassSerializerInterceptor)
@@ -16,9 +17,9 @@ export class MovieController {
   @Get()
   @RBAC(Role.user)
   getMovies(
-    @Query('title', MovieTitleValidationPipe) title?: string,
+    @Query() dto: GetMoviesDto,
   ) {
-    return this.movieService.findAll(title);
+    return this.movieService.findAll(dto);
   }
 
   @Get(':id')
