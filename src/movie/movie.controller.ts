@@ -5,14 +5,16 @@ import { UpdateMovieDto } from './dto/update-movie.dto';
 import { MovieTitleValidationPipe } from './pipe/movie-title-validation.pipe';
 import { AuthGuard } from 'src/auth/guard/auth.guard';
 import { Public } from 'src/auth/decorator/public.decorator';
+import { RBAC } from 'src/auth/decorator/rbac.decorator';
+import { Role } from 'src/user/entity/user.entity';
 
 @Controller('movie')
 @UseInterceptors(ClassSerializerInterceptor)
 export class MovieController {
   constructor(private readonly movieService: MovieService) {}
 
-  @Public()
   @Get()
+  @Public()
   getMovies(
     @Query('title', MovieTitleValidationPipe) title?: string,
   ) {
@@ -20,6 +22,7 @@ export class MovieController {
   }
 
   @Get(':id')
+  @RBAC(Role.admin)
   getMovie(@Param('id', new ParseIntPipe({
     exceptionFactory(error) {
       throw new BadRequestException('숫자를 입력하세요.');
@@ -29,6 +32,7 @@ export class MovieController {
   }
 
   @Post()
+  @RBAC(Role.user)
   postMovie(
     @Body() body: CreateMovieDto
   ) {
@@ -36,6 +40,7 @@ export class MovieController {
   }
 
   @Patch(':id')
+  @RBAC(Role.admin)
   patchMovie(
     @Param('id', ParseIntPipe) id: number,
     @Body() body: UpdateMovieDto
@@ -44,6 +49,7 @@ export class MovieController {
   }
 
   @Delete(':id')
+  @RBAC(Role.admin)
   deleteMovie(
     @Param('id', ParseIntPipe) id: number
   ) {

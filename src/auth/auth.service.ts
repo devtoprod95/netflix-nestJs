@@ -92,7 +92,7 @@ export class AuthService {
             type: isRefreshToken ? 'refresh' : 'access'
         }, {
             secret: isRefreshToken ? refreshTokenSecret : accressTokenSecret,
-            expiresIn: isRefreshToken ? '24h' : 300 // 300초 5분
+            expiresIn: isRefreshToken ? '24h' : 30000 // 300초 5분
         })
     }
 
