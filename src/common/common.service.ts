@@ -17,10 +17,33 @@ export class CommonService {
         qb: SelectQueryBuilder<T>
         nextCursor: string | null}>
     {
-        const {cursor, take, order} = dto;
+        let {cursor, take, order} = dto;
 
         if( cursor ){
+            /**
+             * {
+             *  values: {
+             *      id: 1
+             *  },
+             *  order: ['id_DESC']
+             * }
+            */
+            const decodedCursor = Buffer.from(cursor, 'base64').toString('utf-8');
+            const cursorObj = JSON.parse(decodedCursor);
+            
+            order = cursorObj.order;
 
+            // WHERE (column1 > value1)
+            // or (column1 = value1 and column2 < value2)
+            // or (column1 = value1 and column2 = value2 and column3 < value3)가 아래와 같은 결과의 쿼리
+            // (movie.column1, movie.column2, movie.column3) > (:value1, :value2, :value3) RDB 튜플비교
+            const {values}           = cursorObj;
+            const columns            = Object.keys(values);
+            const comparisonOperator = order.some((e) => e.toUpperCase().endsWith('DESC')) ? '<' : '>';
+            const whereConditions    = columns.map((e) => `${qb.alias}.${e}`).join(',');
+            const whereParams        = columns.map((e) => `:${e}`).join(',');
+
+            qb.where(`(${whereConditions}) ${comparisonOperator} (${whereParams})`, values);
         }
         
         for (let i = 0; i < order.length; i++) {
@@ -56,7 +79,6 @@ export class CommonService {
          *  },
          *  order: ['id_DESC']
          * }
-         * 
          */
         const lastItem = results[results.length - 1];
         const values   = {};
