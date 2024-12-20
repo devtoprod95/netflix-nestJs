@@ -15,6 +15,7 @@ export class ForbiddenExceptionFilter implements ExceptionFilter{
                 statusCode: status,
                 timestamp : new Date().toISOString(),
                 path      : request.url,
+                method    : request.method,
                 massage   : '권한이 없습니다',
             });
     }
