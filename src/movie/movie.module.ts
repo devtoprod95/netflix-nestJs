@@ -7,6 +7,9 @@ import { MovieDetail } from './entity/movie-detail.entity';
 import { Director } from 'src/director/entity/director.entity';
 import { Genre } from 'src/genre/entity/genre.entity';
 import { CommonMudlue } from 'src/common/common.module';
+import { MulterModule } from '@nestjs/platform-express';
+import { diskStorage } from 'multer';
+import { join } from 'path';
 
 @Module({
   imports: [
@@ -17,6 +20,11 @@ import { CommonMudlue } from 'src/common/common.module';
       Genre,
     ]),
     CommonMudlue,
+    MulterModule.register({
+      storage: diskStorage({
+        destination: join(process.cwd(), 'public', 'movie'),
+      })
+    }),
   ],
   controllers: [MovieController],
   providers: [MovieService],
