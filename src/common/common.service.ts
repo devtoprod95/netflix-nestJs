@@ -1,4 +1,4 @@
-import { Injectable } from "@nestjs/common";
+import { BadRequestException, Injectable } from "@nestjs/common";
 import { SelectQueryBuilder } from "typeorm";
 import { PagePaginationDto } from "./dto/page-pagination.dto";
 import { CursorPaginationDto } from "./dto/cursor-pagination.dto";
@@ -14,14 +14,27 @@ export class CommonService {
     }
 
     applyCursorPaginationParamsToQb<T>(qb: SelectQueryBuilder<T>, dto: CursorPaginationDto): void {
-        const {order, id, take} = dto;
+        const {cursor, take, order} = dto;
 
-        if( id ){
-            const direction = order === 'ASC' ? '>' : '<';
-            qb.where(`${qb.alias}.id ${direction} :id`, {id});
+        if( cursor ){
+
+        }
+        
+        for (let i = 0; i < order.length; i++) {
+            const [column, direction] = order[i].split("_");
+            const upperDirection = direction.toUpperCase() as 'ASC' | 'DESC';
+
+            if( !['ASC', 'DESC'].includes(upperDirection) ){
+                throw new BadRequestException('order는 ASC 또는 DESC로만 입력해주세요.');
+            }
+
+            if( i === 0 ){
+                qb.orderBy(`${qb.alias}.${column}`, upperDirection);
+            } else {
+                qb.addOrderBy(`${qb.alias}.${column}`, upperDirection);
+            }
         }
 
-        qb.orderBy(`${qb.alias}.id`, order);
         qb.take(take);
     }
 }

@@ -52,8 +52,9 @@ import { RBACGuard } from './auth/guard/rbac.guard';
           User,
         ],
         synchronize: true,
+        logging: configService.get<string>(envVariableKeys.ENV) === 'dev' ? ["query", "error"] : false,
       }),
-      inject: [ConfigService]
+      inject: [ConfigService],
     }),
     // Joi를 안쓰는 일반 설정일 경우
     // TypeOrmModule.forRoot({
