@@ -40,7 +40,18 @@ export class MovieController {
   @UseInterceptors(FileFieldsInterceptor([
     { name: 'thumbnail', maxCount: 1 },
     { name: 'detailImages', maxCount: 10 },
-  ]))
+  ],{
+    limits: {
+      fileSize: 20000000, // MB
+    },
+    fileFilter(req, file, callback) {
+      if (!file.mimetype.includes('image/')) {
+        return callback(new BadRequestException('이미지 형식만 업로드 가능합니다.'), false)
+      }
+
+      callback(null, true);
+    }
+  }))
   postMovie(
     @Body() body: CreateMovieDto,
     @Request() req,
