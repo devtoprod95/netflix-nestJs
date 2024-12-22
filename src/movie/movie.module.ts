@@ -10,6 +10,7 @@ import { CommonMudlue } from 'src/common/common.module';
 import { MulterModule } from '@nestjs/platform-express';
 import { diskStorage } from 'multer';
 import { join } from 'path';
+import { v4 } from 'uuid';
 
 @Module({
   imports: [
@@ -23,6 +24,10 @@ import { join } from 'path';
     MulterModule.register({
       storage: diskStorage({
         destination: join(process.cwd(), 'public', 'movie'),
+        filename: (req, file, callback) => {
+          const ext = file.originalname.split('.').pop();  // 원본 파일의 확장자 추출
+          callback(null, `${v4()}_${Date.now()}.${ext}`);
+        }
       })
     }),
   ],
