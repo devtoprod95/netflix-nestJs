@@ -28,6 +28,15 @@ export class MovieController {
     return this.movieService.findAll(dto, userId);
   }
 
+  @Get('recent')
+  @RBAC(Role.user)
+  getRecentMovies(
+    @Query() dto: GetMoviesDto,
+    @UserId() userId: number
+  ) {
+    return this.movieService.findRecent();
+  }
+
   @Get(':id')
   @RBAC(Role.user)
   getMovie(
