@@ -35,7 +35,8 @@ export class MovieService {
     const qb = await this.movieRepository.createQueryBuilder('movie')
     .leftJoinAndSelect('movie.detail', 'detail')
     .leftJoinAndSelect('movie.director', 'director')
-    .leftJoinAndSelect('movie.genres', 'genres');
+    .leftJoinAndSelect('movie.genres', 'genres')
+    .leftJoinAndSelect('movie.creator', 'creator');
 
     if(title){
       qb.where('movie.title LIKE :title', {title: `%${title}%`});
@@ -59,6 +60,7 @@ export class MovieService {
     .leftJoinAndSelect('movie.detail', 'detail')
     .leftJoinAndSelect('movie.director', 'director')
     .leftJoinAndSelect('movie.genres', 'genres')
+    .leftJoinAndSelect('movie.creator', 'creator')
     .where('movie.id = :id', {id})
     .getOne();
 
@@ -69,7 +71,7 @@ export class MovieService {
     return movie;
   }
 
-  async create(createMovieDto: CreateMovieDto, qr: QueryRunner){
+  async create(createMovieDto: CreateMovieDto, userId: number, qr: QueryRunner){
     const director = await qr.manager.findOne(Director, {
       where: {
         id: createMovieDto.directorId
@@ -109,11 +111,6 @@ export class MovieService {
     const thumbnailPath = join('public', 'movie');
     const tempFolder    = join('public', 'temp');
 
-    await rename(
-      join(process.cwd(), tempFolder, createMovieDto.thumbnail),
-      join(process.cwd(), thumbnailPath, createMovieDto.thumbnail),
-    )
-
     const movie = await qr.manager.createQueryBuilder()
     .insert()
     .into(Movie)
@@ -123,6 +120,9 @@ export class MovieService {
         id: movieDetailId
       },
       director: director,
+      creator: {
+        id: userId
+      },
       thumbnail: join(thumbnailPath, createMovieDto.thumbnail)
     })
     .execute();
@@ -132,6 +132,11 @@ export class MovieService {
     .relation(Movie, 'genres')
     .of(movieId)
     .add(genres.map(genre => genre.id));
+
+    await rename(
+      join(process.cwd(), tempFolder, createMovieDto.thumbnail),
+      join(process.cwd(), thumbnailPath, createMovieDto.thumbnail),
+    )
 
     return qr.manager.findOne(Movie, {
       where: {

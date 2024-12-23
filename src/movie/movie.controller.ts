@@ -10,6 +10,7 @@ import { Role } from 'src/user/entity/user.entity';
 import { GetMoviesDto } from './dto/get-movies.dto';
 import { TransactionInterceptor } from 'src/common/interceptor/transaction.interceptor';
 import { FileFieldsInterceptor, FileInterceptor, FilesInterceptor } from '@nestjs/platform-express';
+import { UserId } from 'src/user/decorator/user-id.decorator';
 
 @Controller('movie')
 @UseInterceptors(ClassSerializerInterceptor)
@@ -40,8 +41,9 @@ export class MovieController {
   postMovie(
     @Body() body: CreateMovieDto,
     @Request() req,
+    @UserId() userId
   ) {
-    return this.movieService.create(body, req.queryRunner);
+    return this.movieService.create(body, userId, req.queryRunner);
   }
 
   @Patch(':id')
