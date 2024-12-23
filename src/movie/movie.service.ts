@@ -34,7 +34,7 @@ export class MovieService {
     private readonly commonService: CommonService,
   ){}
 
-  async findAll(dto: GetMoviesDto) {
+  async findAll(dto: GetMoviesDto, userId) {
     // const {title, take, page} = dto;
     const {title} = dto;
 
@@ -51,8 +51,27 @@ export class MovieService {
     // if( take && page ){
     //   this.commonService.applyPagePaginationParamsToQb(qb, dto);
     // }
+
     const {nextCursor}  = await this.commonService.applyCursorPaginationParamsToQb(qb, dto);
-    const [data, count] = await qb.getManyAndCount();
+    let [data, count] = await qb.getManyAndCount();
+
+    const movieIds    = data.map(movie => movie.id);
+    const likedMovies = movieIds.length < 1 ? [] : await this.movieUserLikeRepository.createQueryBuilder('mul')
+      .leftJoinAndSelect('mul.user', 'user')
+      .leftJoinAndSelect('mul.movie', 'movie')
+      .where('movie.id IN (:...movieIds)', {movieIds})
+      .andWhere('user.id = :userId', {userId})
+      .getMany();
+
+    const likedMovieMap = likedMovies.reduce((acc, next) => ({
+      ...acc,
+      [next.movie.id]: next.isLike
+    }), {});
+
+    data = data.map((e) => ({
+      ...e,
+      isLike: e.id in likedMovieMap ? likedMovieMap[e.id] : null
+    }));
 
     return {
       data,
@@ -61,7 +80,7 @@ export class MovieService {
     }
   }
 
-  async findOne(id: number) {
+  async findOne(id: number, userId: number) {
     const movie = await this.movieRepository.createQueryBuilder('movie')
     .leftJoinAndSelect('movie.detail', 'detail')
     .leftJoinAndSelect('movie.director', 'director')

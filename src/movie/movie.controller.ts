@@ -23,18 +23,22 @@ export class MovieController {
   @RBAC(Role.user)
   getMovies(
     @Query() dto: GetMoviesDto,
+    @UserId() userId: number
   ) {
-    return this.movieService.findAll(dto);
+    return this.movieService.findAll(dto, userId);
   }
 
   @Get(':id')
   @RBAC(Role.user)
-  getMovie(@Param('id', new ParseIntPipe({
-    exceptionFactory(error) {
-      throw new BadRequestException('숫자를 입력하세요.');
-    }
-  })) id: number) {
-    return this.movieService.findOne(id)
+  getMovie(
+    @Param('id', new ParseIntPipe({
+      exceptionFactory(error) {
+        throw new BadRequestException('숫자를 입력하세요.');
+      }
+    })) id: number,
+    @UserId() userId
+  ) {
+    return this.movieService.findOne(id, userId)
   }
 
   @Post()
