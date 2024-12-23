@@ -9,6 +9,7 @@ import { Director } from 'src/director/entity/director.entity';
 import { Genre } from 'src/genre/entity/genre.entity';
 import { GetMoviesDto } from './dto/get-movies.dto';
 import { CommonService } from 'src/common/common.service';
+import { join } from 'path';
 
 @Injectable()
 export class MovieService {
@@ -67,7 +68,7 @@ export class MovieService {
     return movie;
   }
 
-  async create(createMovieDto: CreateMovieDto, qr: QueryRunner){
+  async create(createMovieDto: CreateMovieDto, thumbnailName: string, qr: QueryRunner){
     const director = await qr.manager.findOne(Director, {
       where: {
         id: createMovieDto.directorId
@@ -104,6 +105,8 @@ export class MovieService {
       throw new ConflictException('이미 존재하는 영화가 있습니다.');
     }
 
+    const thumbnailPath = join('public', 'movie');
+
     const movie = await qr.manager.createQueryBuilder()
     .insert()
     .into(Movie)
@@ -113,6 +116,7 @@ export class MovieService {
         id: movieDetailId
       },
       director: director,
+      thumbnail: join(thumbnailPath, thumbnailName)
     })
     .execute();
     const movieId: number = movie.identifiers[0].id;

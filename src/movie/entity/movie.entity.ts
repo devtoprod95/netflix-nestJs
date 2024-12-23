@@ -38,6 +38,9 @@ export class Movie extends BaseTable {
     @JoinColumn()
     detail: MovieDetail;
 
+    @Column()
+    thumbnail: string;
+
     @ManyToOne(
         () => Director,
         director => director.id,

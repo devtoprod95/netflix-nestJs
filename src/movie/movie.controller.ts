@@ -58,12 +58,11 @@ export class MovieController {
     @Request() req,
     @UploadedFiles() files: {
       movie: Express.Multer.File[],
-      thumbnail: Express.Multer.File[],
+      thumbnail: Express.Multer.File,
       detailImages: Express.Multer.File[]
     }
   ) {
-    console.log(files.thumbnail, files.detailImages);
-    return this.movieService.create(body, req.queryRunner);
+    return this.movieService.create(body, files.thumbnail[0].filename, req.queryRunner);
   }
 
   @Patch(':id')
