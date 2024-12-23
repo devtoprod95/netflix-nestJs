@@ -64,4 +64,24 @@ export class MovieController {
   ) {
     return this.movieService.remove(id);
   }
+
+  @Post(':id/like')
+  @UseInterceptors(TransactionInterceptor)
+  createMovieLike(
+    @Param('id', ParseIntPipe) movieId: number,
+    @UserId() userId: number,
+    @QueryRunner() queryRunner: QR,
+  ) {
+    return this.movieService.toggleMovieLike(movieId, userId, true, queryRunner);
+  }
+
+  @Post(':id/dislike')
+  @UseInterceptors(TransactionInterceptor)
+  createMovieDisLike(
+    @Param('id', ParseIntPipe) movieId: number,
+    @UserId() userId: number,
+    @QueryRunner() queryRunner: QR,
+  ) {
+    return this.movieService.toggleMovieLike(movieId, userId, false, queryRunner);
+  }
 }

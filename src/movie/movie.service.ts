@@ -1,4 +1,4 @@
-import { ConflictException, Injectable, NotFoundException } from '@nestjs/common';
+import { BadRequestException, ConflictException, Injectable, NotFoundException, UnauthorizedException } from '@nestjs/common';
 import { CreateMovieDto } from './dto/create-movie.dto';
 import { UpdateMovieDto } from './dto/update-movie.dto';
 import { Movie } from './entity/movie.entity';
@@ -11,6 +11,8 @@ import { GetMoviesDto } from './dto/get-movies.dto';
 import { CommonService } from 'src/common/common.service';
 import { join } from 'path';
 import { rename } from 'fs/promises';
+import { User } from 'src/user/entity/user.entity';
+import { MovieUserLike } from './entity/movie-user-like.entity';
 
 @Injectable()
 export class MovieService {
@@ -24,6 +26,10 @@ export class MovieService {
     private readonly directorRepository: Repository<Director>,
     @InjectRepository(Genre)
     private readonly genreRepository: Repository<Genre>,
+    @InjectRepository(User)
+    private readonly userRepository: Repository<User>,
+    @InjectRepository(MovieUserLike)
+    private readonly movieUserLikeRepository: Repository<MovieUserLike>,
     private readonly dataSource: DataSource,
     private readonly commonService: CommonService,
   ){}
@@ -248,5 +254,66 @@ export class MovieService {
     }
 
     return id;
+  }
+
+  async toggleMovieLike(movieId: number, userId: number, isLike: boolean, qr: QueryRunner) {
+    const movie = await this.movieRepository.findOne({
+      where: {
+        id: movieId
+      }
+    });
+    if( !movie ){
+      throw new BadRequestException('존재하지 않는 영화입니다.')
+    }
+    
+    const user = await this.userRepository.findOne({
+      where: {
+        id: userId
+      }
+    });
+    if( !user ){
+      throw new UnauthorizedException('존재하지 않는 회원입니다.')
+    }
+    
+    const likeRecord = await this.movieUserLikeRepository.findOne({
+      where: {
+        movieId,
+        userId
+      }
+    });
+
+    if( likeRecord ){
+      if(isLike === likeRecord.isLike){
+        await qr.manager.delete(MovieUserLike, {
+          movieId,
+          userId
+        });
+      } else {
+        await qr.manager.update(MovieUserLike, {
+          movieId,
+          userId
+        },{
+          isLike
+        });
+      }
+    } else {
+      await qr.manager.createQueryBuilder()
+        .insert()
+        .into(MovieUserLike)
+        .values({
+          movieId, userId, isLike
+        })
+        .execute();
+    }
+
+    const result = await this.movieUserLikeRepository.findOne({
+      where: {
+        movieId,
+        userId
+      }
+    });
+    return {
+      isLike: result && result.isLike
+    };
   }
 }

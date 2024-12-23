@@ -22,6 +22,7 @@ import { ForbiddenExceptionFilter } from './common/filter/forbidden.filter';
 import { QueryFailedExceptionFilter } from './common/filter/query-failed.filter';
 import { ServeStaticModule } from '@nestjs/serve-static';
 import { join } from 'path';
+import { MovieUserLike } from './movie/entity/movie-user-like.entity';
 
 @Module({
   imports: [
@@ -55,6 +56,7 @@ import { join } from 'path';
           Director,
           Genre,
           User,
+          MovieUserLike
         ],
         synchronize: true,
         // logging: configService.get<string>(envVariableKeys.ENV) === 'dev' ? ["query", "error"] : false,
