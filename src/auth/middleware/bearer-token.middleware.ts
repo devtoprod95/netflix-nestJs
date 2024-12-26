@@ -19,23 +19,28 @@ export class BearerTokenMiddleware implements NestMiddleware{
 
         if(!authHeader) return next();
 
+        const token = this.validateBearerToken(authHeader);
+
+        const blockedToken = await this.cacheManager.get(`BLOCK_TOKEN_${token}`);
+        if(blockedToken){
+            throw new UnauthorizedException('차단된 토큰입니다.');
+        }
+
+        const tokenKey = `TOKEN_${token}`;
+        const cachedPayload = await this.cacheManager.get(tokenKey);
+
+        if(cachedPayload){
+            req.user = cachedPayload;
+            return next();
+        }
+
+        const decodePayload = this.jwtService.decode(token);
+
+        if( !['refresh', 'access'].includes(decodePayload?.type) ){
+            throw new UnauthorizedException('잘못된 토큰입니다.');
+        };
+
         try {
-            const token = this.validateBearerToken(authHeader);
-            const tokenKey = `TOKEN_${token}`;
-
-            const cachedPayload = await this.cacheManager.get(tokenKey);
-
-            if(cachedPayload){
-                req.user = cachedPayload;
-                return next();
-            }
-
-            const decodePayload = this.jwtService.decode(token);
-
-            if( !['refresh', 'access'].includes(decodePayload?.type) ){
-                throw new UnauthorizedException('잘못된 토큰입니다.');
-            };
-
             const payload = await this.jwtService.verifyAsync(token, {
                 secret: this.configService.get<string>(
                     decodePayload.type === 'refresh' ? envVariableKeys.REFRESH_TOKEN_SECRET : envVariableKeys.ACCESS_TOKEN_SECRET

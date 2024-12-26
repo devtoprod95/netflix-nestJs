@@ -1,4 +1,4 @@
-import { ClassSerializerInterceptor, Controller, Get, Headers, Post, Request, UseGuards, UseInterceptors } from '@nestjs/common';
+import { Body, ClassSerializerInterceptor, Controller, Get, Headers, Post, Request, UseGuards, UseInterceptors } from '@nestjs/common';
 import { AuthService } from './auth.service';
 import { LocalAuthGuard } from './strategy/local.strategy';
 import { JwtAuthGuard } from './strategy/jwt.strategy';
@@ -44,5 +44,13 @@ export class AuthController {
   @Get('login/passport-jwt')
   async private(@Request() req){
     return req.user;
+  }
+
+  @Public()
+  @Post('token/block')
+  blockToken(
+    @Body('token') token: string
+  ){
+    return this.authService.tokenBlock(token);
   }
 }
