@@ -13,6 +13,7 @@ import { FileFieldsInterceptor, FileInterceptor, FilesInterceptor } from '@nestj
 import { UserId } from 'src/user/decorator/user-id.decorator';
 import { QueryRunner } from 'src/common/decorator/query-runner.decorator';
 import { QueryRunner as QR } from 'typeorm';
+import { CacheInterceptor as CI } from '@nestjs/cache-manager';
 
 @Controller('movie')
 @UseInterceptors(ClassSerializerInterceptor)
@@ -30,6 +31,7 @@ export class MovieController {
 
   @Get('recent')
   @RBAC(Role.user)
+  @UseInterceptors(CI) // URL 기반으로 캐싱
   getRecentMovies(
     @Query() dto: GetMoviesDto,
     @UserId() userId: number
