@@ -5,17 +5,21 @@ import { readdir, unlink } from "fs/promises";
 import { join, parse } from "path"; 
 import { Movie } from "src/movie/entity/movie.entity";
 import { Repository } from "typeorm";
+import { Logger } from "@nestjs/common";
 
 @Injectable()
 export class taskService {
+    private readonly logger = new Logger(taskService.name);
+
     constructor(
         @InjectRepository(Movie)
         private readonly movieRepository: Repository<Movie>,
         private readonly schedulerRegistry: SchedulerRegistry,
     ){}
 
+    // @Cron('* * * * * *')
     logEverySecond(){
-        console.log('1초마다 실행!');
+        this.logger.log('1초마다 실행');
     }
     
     // @Cron('* * * * * *')
