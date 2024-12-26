@@ -8,7 +8,7 @@ export class ForbiddenExceptionFilter implements ExceptionFilter{
         const request  = ctx.getRequest();
 
         const status = exception.getStatus();
-        console.log(`[UnauthorizedException] ${request.method} ${request.path}`);
+        console.log(`[ForbiddenException] ${request.method} ${request.path}`);
 
         response.status(status)
             .json({
@@ -16,7 +16,7 @@ export class ForbiddenExceptionFilter implements ExceptionFilter{
                 timestamp : new Date().toISOString(),
                 path      : request.url,
                 method    : request.method,
-                massage   : '권한이 없습니다',
+                massage   : exception.message ?? '권한이 없습니다.',
             });
     }
 }
