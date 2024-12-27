@@ -5,7 +5,7 @@ import { MulterModule } from "@nestjs/platform-express";
 import { diskStorage } from "multer";
 import { join } from "path";
 import { v4 } from "uuid";
-import { taskService } from "./task.service";
+import { TaskService } from "./task.service";
 import { TypeOrmModule } from "@nestjs/typeorm";
 import { Movie } from "src/movie/entity/movie.entity";
 
@@ -25,7 +25,7 @@ import { Movie } from "src/movie/entity/movie.entity";
         ])
     ],
     controllers: [CommonController],
-    providers: [CommonService, taskService],
+    providers: [CommonService, TaskService],
     exports: [CommonService],
 })
 export class CommonMudlue{}
