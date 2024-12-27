@@ -4,7 +4,7 @@ export class CursorPaginationDto {
     @IsString()
     @IsOptional()
     // id_52,likeCount_20
-    cursor: string;
+    cursor?: string;
 
     @IsArray()
     @IsString({

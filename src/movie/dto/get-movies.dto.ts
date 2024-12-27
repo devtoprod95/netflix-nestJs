@@ -6,5 +6,5 @@ export class GetMoviesDto extends CursorPaginationDto {
 
     @IsString()
     @IsOptional()
-    title: string;
+    title?: string;
 }

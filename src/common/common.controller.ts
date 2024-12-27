@@ -1,7 +1,9 @@
 import { BadRequestException, Controller, Post, UploadedFile, UploadedFiles, UseInterceptors } from '@nestjs/common';
 import { FileFieldsInterceptor, FileInterceptor } from '@nestjs/platform-express';
+import { ApiBearerAuth } from '@nestjs/swagger';
 
 @Controller('common')
+@ApiBearerAuth()
 export class CommonController {
     @Post('thumbnail')
     @UseInterceptors(FileInterceptor('thumbnail', {
