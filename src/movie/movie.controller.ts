@@ -28,7 +28,7 @@ export class MovieController {
   @Get()
   @RBAC(Role.user)
   @Throttle({
-    count: 2,
+    count: 100,
     unit: 'minute'
   })
   getMovies(
