@@ -15,11 +15,12 @@ import { QueryRunner } from 'src/common/decorator/query-runner.decorator';
 import { QueryRunner as QR } from 'typeorm';
 import { CacheInterceptor as CI } from '@nestjs/cache-manager';
 import { Throttle } from 'src/common/decorator/throttle.decorator';
-import { ApiBearerAuth } from '@nestjs/swagger';
+import { ApiBearerAuth, ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
 
 @Controller({
   path: 'movie',
 })
+@ApiTags('Movie')
 @ApiBearerAuth()
 @UseInterceptors(ClassSerializerInterceptor)
 export class MovieController {
@@ -27,6 +28,17 @@ export class MovieController {
 
   @Get()
   @RBAC(Role.user)
+  @ApiOperation({
+    description: '[Movie]를 Pagination 하는 endPoint'
+  })
+  @ApiResponse({
+    status: 200,
+    description: '정상 통신'
+  })
+  @ApiResponse({
+    status: 400,
+    description: '클라이언트 에러 통신'
+  })
   @Throttle({
     count: 100,
     unit: 'minute'
