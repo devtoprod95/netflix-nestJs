@@ -10,10 +10,10 @@ import { UpdateUserDto } from './dto/update-user.dto';
 
 const mockUserRepository = {
   findOne: jest.fn(),
-  save: jest.fn(),
-  find: jest.fn(),
-  update: jest.fn(),
-  delete: jest.fn()
+  save   : jest.fn(),
+  find   : jest.fn(),
+  update : jest.fn(),
+  delete : jest.fn()
 }
 
 const mockConfigService = {
