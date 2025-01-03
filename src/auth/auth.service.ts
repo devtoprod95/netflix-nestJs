@@ -69,7 +69,7 @@ export class AuthService {
 
     async issueToken(user: {id: number, role: Role}, isRefreshToken: boolean){
         const refreshTokenSecret = this.configService.get<string>(envVariableKeys.REFRESH_TOKEN_SECRET);
-        const accressTokenSecret = this.configService.get<string>(envVariableKeys.REFRESH_TOKEN_SECRET);
+        const accressTokenSecret = this.configService.get<string>(envVariableKeys.ACCESS_TOKEN_SECRET);
 
         return await this.jwtService.signAsync({
             sub: user.id,

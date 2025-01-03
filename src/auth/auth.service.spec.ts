@@ -1,13 +1,14 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { AuthService } from './auth.service';
 import { Repository } from 'typeorm';
-import { User } from 'src/user/entity/user.entity';
+import { Role, User } from 'src/user/entity/user.entity';
 import { ConfigService } from '@nestjs/config';
 import { JwtService } from '@nestjs/jwt';
 import { Cache, CACHE_MANAGER } from '@nestjs/cache-manager';
 import { getRepositoryToken } from '@nestjs/typeorm';
 import { UserService } from 'src/user/user.service';
 import { BadRequestException } from '@nestjs/common';
+import * as bcrypt from 'bcrypt';
 
 const mockUserRepository = {
   findOne: jest.fn(),
@@ -126,4 +127,138 @@ describe('AuthService', () => {
     });
   });
 
+  describe("register", () => {
+    it('should register', async() => {
+      const rawToken = 'Basic dGVzdEBnbWFpbC5jb206MTIzNA==';
+      const user     = {
+        email: 'test@gmail.com',
+        password: '1234'
+      };
+
+      jest.spyOn(service, "parseBasicToken").mockReturnValue(user);
+      jest.spyOn(mockUserService, "create").mockResolvedValue(user);
+
+      const result = await service.register(rawToken);
+      expect(service.parseBasicToken).toHaveBeenCalledWith(rawToken);
+      expect(result).toEqual(user);
+    });
+  });
+
+  describe("authenticate", () => {
+    it('should authenticate a user with correct info', async() => {
+      const user = {
+        email: 'test@gmail.com',
+        password: '1234'
+      };
+
+      jest.spyOn(mockUserRepository, "findOne").mockResolvedValue(user);
+      jest.spyOn(bcrypt, 'compare').mockImplementation((a, b) => true);
+
+      const result = await service.authenticate(user.email, user.password);
+
+      expect(userRepository.findOne).toHaveBeenCalledWith({where: {email: user.email}});
+      expect(bcrypt.compare).toHaveBeenCalledWith(user.password, user.password);
+      expect(result).toEqual(user);
+    });
+
+    it('should throw an error for not existing user', async() => {
+      const user = {
+        email: 'test@gmail.com',
+        password: '1234'
+      };
+
+      jest.spyOn(mockUserRepository, "findOne").mockResolvedValue(null);
+
+      expect(service.authenticate(user.email, user.password)).rejects.toThrow(BadRequestException);
+      expect(userRepository.findOne).toHaveBeenCalled();
+    });
+
+    it('should throw an error for not valify compare', async() => {
+      const user = {
+        email: 'test@gmail.com',
+        password: '1234'
+      };
+
+      jest.spyOn(mockUserRepository, "findOne").mockResolvedValue(user);
+      jest.spyOn(bcrypt, 'compare').mockImplementation((a, b) => false);
+
+      expect(service.authenticate(user.email, user.password)).rejects.toThrow(BadRequestException);
+      expect(userRepository.findOne).toHaveBeenCalled();
+    });
+  });
+
+  describe("issueToken", () => {
+    const secret = 'secret';
+    const token  = 'token';
+    const user = {
+      id: 1,
+      role: Role.admin
+    };
+
+    beforeEach(() => {
+      jest.spyOn(mockConfigService, 'get').mockReturnValue(secret);
+      jest.spyOn(mockJwtService, 'signAsync').mockReturnValue(token);
+    });
+
+    it('should issue an access token', async() => {
+      const isRefreshToken = false;
+      const result = await service.issueToken(user, isRefreshToken);
+
+      expect(jwtService.signAsync).toHaveBeenCalledWith(
+        {
+          sub: user.id,
+          role: user.role,
+          type: isRefreshToken ? 'refresh' : 'access'
+        },
+        {
+          secret: secret,
+          expiresIn: 30000 // 300초 5분
+        }
+      );
+      expect(result).toEqual(token);
+    });
+
+    it('should issue an refresh token', async() => {
+      const isRefreshToken = true;
+      const result = await service.issueToken(user, isRefreshToken);
+
+      expect(jwtService.signAsync).toHaveBeenCalledWith(
+        {
+          sub: user.id,
+          role: user.role,
+          type: isRefreshToken ? 'refresh' : 'access'
+        },
+        {
+          secret: secret,
+          expiresIn: '24h' // 300초 5분
+        }
+      );
+      expect(result).toEqual(token);
+    });
+  });
+
+  describe("login", () => {
+    it('should login', async() => {
+      const rawToken = 'Basic dGVzdEBnbWFpbC5jb206MTIzNA==';
+      const user     = {
+        email: 'test@gmail.com',
+        password: '1234'
+      };
+      const payload = {
+        refreshToken: "mockToken",
+        accessToken: "mockToken",
+      }
+
+      jest.spyOn(service, "parseBasicToken").mockReturnValue(user);
+      jest.spyOn(service, "authenticate").mockResolvedValue(user as User);
+      jest.spyOn(service, "issueToken").mockResolvedValue(payload.refreshToken);
+
+      const result = await service.login(rawToken);
+
+      expect(service.parseBasicToken).toHaveBeenCalledWith(rawToken);
+      expect(service.authenticate).toHaveBeenCalledWith(user.email, user.password);
+      expect(service.issueToken).toHaveBeenCalledTimes(2);
+      expect(result).toEqual(payload);
+    });
+  });
 });
