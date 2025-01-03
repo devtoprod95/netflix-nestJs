@@ -2,8 +2,10 @@ import { Test, TestingModule } from '@nestjs/testing';
 import { UserService } from './user.service';
 import { getRepositoryToken } from '@nestjs/typeorm';
 import { User } from './entity/user.entity';
-import { mock } from 'node:test';
-import { NotFoundException } from '@nestjs/common';
+import { BadRequestException, NotFoundException } from '@nestjs/common';
+import { ConfigService } from '@nestjs/config';
+import * as bcrypt from 'bcrypt';
+import { CreateUserDto } from './dto/create-user.dto';
 
 const mockUserRepository = {
   findOne: jest.fn(),
@@ -11,6 +13,10 @@ const mockUserRepository = {
   find: jest.fn(),
   update: jest.fn(),
   delete: jest.fn()
+}
+
+const mockConfigService = {
+  get: jest.fn()
 }
 
 describe('UserService', () => {
@@ -23,6 +29,10 @@ describe('UserService', () => {
         {
           provide: getRepositoryToken(User),
           useValue: mockUserRepository,
+        },
+        {
+          provide: ConfigService,
+          useValue: mockConfigService,
         }
       ],
     }).compile();
@@ -32,6 +42,55 @@ describe('UserService', () => {
 
   it('should be defined', () => {
     expect(service).toBeDefined();
+  });
+
+  describe("create", () => {
+    it('should create a new user and return it', async () => {
+      const createUserDto: CreateUserDto = {
+        email: 'test@gmail.com',
+        password: '123'
+      };
+      const hashRound      = 10;
+      const hashedPassword = 'fdafdafda';
+
+      const result = {
+        id: 1,
+        email: createUserDto.email,
+        password: hashedPassword
+      };
+
+      jest.spyOn(mockUserRepository, 'findOne').mockResolvedValueOnce(null);
+      jest.spyOn(mockConfigService, 'get').mockReturnValue(hashRound);
+      jest.spyOn(bcrypt, 'hash').mockImplementation((password, hashRound) => hashedPassword);
+      jest.spyOn(mockUserRepository, 'findOne').mockResolvedValueOnce(result);
+
+      const createdUser = await service.create(createUserDto);
+      expect(createdUser).toEqual(result);
+      expect(mockUserRepository.findOne).toHaveBeenNthCalledWith(1, {where: {email: createUserDto.email}});
+      expect(mockUserRepository.findOne).toHaveBeenNthCalledWith(2, {where: {email: createUserDto.email}});
+      expect(mockConfigService.get).toHaveBeenCalledWith(expect.anything());
+      expect(bcrypt.hash).toHaveBeenCalledWith(createUserDto.password, hashRound);
+      expect(mockUserRepository.save).toHaveBeenCalledWith({
+        email: createUserDto.email,
+        password: hashedPassword
+      });
+    });
+
+    it('should throw a BadRequestException if user is not found', async () => {
+      const createUserDto: CreateUserDto = {
+        email: 'test@gmail.com',
+        password: '123'
+      };
+
+      jest.spyOn(mockUserRepository, 'findOne').mockResolvedValueOnce(createUserDto);
+
+      expect(service.create(createUserDto)).rejects.toThrow(BadRequestException);
+      expect(mockUserRepository.findOne).toHaveBeenCalledWith({
+        where: {
+          email: createUserDto.email
+        }
+      });
+    });
   });
 
   describe("findAll", () => {
@@ -82,6 +141,36 @@ describe('UserService', () => {
         }
       });
     });
+  });
 
+  describe("remove", () => {
+    it('should delete a user by id', async () => {
+      const id = 999;
+
+      jest.spyOn(mockUserRepository, 'findOne').mockResolvedValue({
+        id
+      });
+
+      const result = await service.remove(id);
+
+      expect(result).toEqual(id);
+      expect(mockUserRepository.findOne).toHaveBeenCalledWith({
+        where: {
+          id
+        }
+      });
+    });
+
+    it('should throw a NotFoundException if user to delete is not found', async () => {
+      jest.spyOn(mockUserRepository, 'findOne').mockResolvedValue(null);
+
+      const id = 999;
+      expect(service.remove(id)).rejects.toThrow(NotFoundException);
+      expect(mockUserRepository.findOne).toHaveBeenCalledWith({
+        where: {
+          id
+        }
+      });
+    });
   });
 });
