@@ -7,6 +7,7 @@ import { JwtService } from '@nestjs/jwt';
 import { Cache, CACHE_MANAGER } from '@nestjs/cache-manager';
 import { getRepositoryToken } from '@nestjs/typeorm';
 import { UserService } from 'src/user/user.service';
+import { BadRequestException } from '@nestjs/common';
 
 const mockUserRepository = {
   findOne: jest.fn(),
@@ -73,7 +74,56 @@ describe('AuthService', () => {
     cacheManager   = module.get<Cache>(CACHE_MANAGER);
   });
 
+  afterEach(() => {
+    jest.clearAllMocks();
+  });
+
   it('should be defined', () => {
     expect(service).toBeDefined();
   });
+
+  describe("tokenBlock", () => {
+    it('should block a token', async () => {
+      const token = 'token';
+      const payload = {
+        exp: Math.floor(Date.now() / 1000) + 60,
+      };
+
+      jest.spyOn(jwtService, "decode").mockReturnValue(payload);
+
+      const blockResult = await service.tokenBlock(token);
+      expect(jwtService.decode).toHaveBeenCalledWith(token);
+      expect(cacheManager.set).toHaveBeenCalledWith(`BLOCK_TOKEN_${token}`, payload, expect.any(Number));
+      expect(blockResult).toBeTruthy();
+    });
+  });
+
+  describe("parseBasicToken", () => {
+    it('should parse a valid Basic Token', async () => {
+      const decode   = {email: 'test@gmail.com', password: '1234'};
+      const rawToken = 'Basic dGVzdEBnbWFpbC5jb206MTIzNA==';
+
+      // const decode   = {email: 'test@gmail.com', password: '12345'};
+      // jest.spyOn(service, "parseBasicToken").mockReturnValue(decode);
+
+      const result = await service.parseBasicToken(rawToken);
+      expect(result).toEqual(decode);
+    });
+    it('should throw an error for invalid token format', () => {
+      const rawToken = 'InvalidTokenFormat';
+      // promise면 rejects인데 아니면 람다식으로 정의해야함
+      expect(() => service.parseBasicToken(rawToken)).toThrow(BadRequestException);
+    });
+    it('should throw an error for invalid Basic Token format', () => {
+      const rawToken = 'basicc InvalidTokenFormat';
+      // promise면 rejects인데 아니면 람다식으로 정의해야함
+      expect(() => service.parseBasicToken(rawToken)).toThrow(BadRequestException);
+    });
+    it('should throw an decode error for invalid Basic Token format', () => {
+      const rawToken = 'basic InvalidTokenFormat';
+      // promise면 rejects인데 아니면 람다식으로 정의해야함
+      expect(() => service.parseBasicToken(rawToken)).toThrow(BadRequestException);
+    });
+  });
+
 });
