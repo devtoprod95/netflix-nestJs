@@ -6,6 +6,7 @@ import { BadRequestException, NotFoundException } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import * as bcrypt from 'bcrypt';
 import { CreateUserDto } from './dto/create-user.dto';
+import { UpdateUserDto } from './dto/update-user.dto';
 
 const mockUserRepository = {
   findOne: jest.fn(),
@@ -37,7 +38,11 @@ describe('UserService', () => {
       ],
     }).compile();
 
-    service = module.get<UserService>(UserService);
+    service = module.get<UserService>(UserService); 
+  });
+
+  afterEach(() => {
+    jest.clearAllMocks();
   });
 
   it('should be defined', () => {
@@ -141,6 +146,72 @@ describe('UserService', () => {
         }
       });
     });
+  });
+
+  describe("update", () => {
+    it('should update a user if it exists and return the updated user', async () => {
+      const updateUserDto: UpdateUserDto = {
+        email: 'test@gmail.com',
+        password: "123"
+      };
+      const hashRound = 10;
+      const hashedPassword = "123sddss";
+      const user = {
+        id: 1,
+        email: updateUserDto.email
+      }
+
+      jest.spyOn(mockUserRepository, 'findOne').mockResolvedValueOnce(user);
+      jest.spyOn(mockConfigService, 'get').mockReturnValue(hashRound);
+      jest.spyOn(bcrypt, 'hash').mockImplementation((password, hashRound) => hashedPassword);
+      jest.spyOn(mockUserRepository, 'update').mockResolvedValue(undefined);
+      jest.spyOn(mockUserRepository, 'findOne').mockResolvedValueOnce({
+        ...user,
+        password: hashedPassword
+      });
+
+      const result = await service.update(user.id, updateUserDto);
+
+      expect(result).toEqual({
+        ...user,
+        password: hashedPassword
+      });
+      expect(mockUserRepository.findOne).toHaveBeenCalledWith({
+        where: {
+          id: user.id
+        }
+      });
+      expect(mockConfigService.get).toHaveBeenCalledWith(expect.anything());
+      expect(bcrypt.hash).toHaveBeenCalledWith(updateUserDto.password, hashRound);
+      expect(mockUserRepository.update).toHaveBeenCalledWith(
+        {
+          id: user.id
+        },
+        {
+          ...updateUserDto,
+          password: hashedPassword
+        }
+      );
+    });
+
+    it('should throw a NotFoundException if user to update is not found', async () => {
+      jest.spyOn(mockUserRepository, 'findOne').mockResolvedValue(null);
+
+      const id = 999;
+      const updateUserDto: UpdateUserDto = {
+        email: "test@gmail.com",
+        password: "123sss"
+      };
+
+      expect(service.update(id, updateUserDto)).rejects.toThrow(NotFoundException);
+      expect(mockUserRepository.findOne).toHaveBeenCalledWith({
+        where: {
+          id
+        }
+      });
+      expect(mockUserRepository.update).not.toHaveBeenCalled();
+    });
+
   });
 
   describe("remove", () => {
