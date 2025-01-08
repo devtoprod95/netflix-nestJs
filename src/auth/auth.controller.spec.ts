@@ -93,20 +93,31 @@ describe('AuthController', () => {
         id: 1,
         role: Role.user
       };
-      const param        = {user};
       const accessToken  = 'mock.access.token';
       const refreshToken = 'mock.refresh.token';
-      
-      jest.spyOn(service, "issueToken")
-        .mockResolvedValueOnce(refreshToken)
-        .mockResolvedValueOnce(accessToken);
+      const req = {
+        user: {
+          userInfo: user,
+          refreshToken,
+          accessToken,
+        },
+      };
 
-      const result = await controller.loginUserPassportLocal(param);
-
-      expect(service.issueToken).toHaveBeenCalledTimes(2);
-      expect(service.issueToken).toHaveBeenNthCalledWith(1, user, true);
-      expect(service.issueToken).toHaveBeenNthCalledWith(2, user, false);
+      const result = await controller.loginUserPassportLocal(req);
       expect(result).toEqual({user, refreshToken, accessToken});
+    });
+  });
+
+  describe('blockToken', () => {
+    it('should block a token', async() => {
+      const token = "some.jwt.token";
+
+      jest.spyOn(service, 'tokenBlock').mockResolvedValue(true);
+
+      const result = await controller.blockToken(token);
+
+      expect(service.tokenBlock).toHaveBeenCalled();
+      expect(result).toBeTruthy();
     });
   });
 });

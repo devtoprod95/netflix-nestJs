@@ -46,11 +46,11 @@ export class AuthController {
     }
   }
 
-  @UseGuards(JwtAuthGuard)
-  @Get('login/passport-jwt')
-  async private(@Request() req){
-    return req.user;
-  }
+  // @UseGuards(JwtAuthGuard)
+  // @Get('login/passport-jwt')
+  // async private(@Request() req){
+  //   return req.user;
+  // }
 
   @Public()
   @Post('token/block')
