@@ -47,7 +47,7 @@ export class GenreService {
     });
 
     if( !genre ){
-      throw new Error("존재하지 않는 ID 값의 장르입니다.");
+      throw new NotFoundException("존재하지 않는 ID 값의 장르입니다.");
     }
 
     await this.genreRepository.update({id},{
@@ -71,7 +71,7 @@ export class GenreService {
     });
 
     if( !genre ){
-      throw new Error("존재하지 않는 ID 값의 장르입니다.");
+      throw new NotFoundException("존재하지 않는 ID 값의 장르입니다.");
     }
 
     await this.genreRepository.delete(id);
