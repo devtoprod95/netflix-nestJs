@@ -32,6 +32,10 @@ describe('GenreController', () => {
     service    = module.get<GenreService>(GenreService);
   });
 
+  afterEach(() => {
+    jest.clearAllMocks();
+  });
+
   it('should be defined', () => {
     expect(controller).toBeDefined();
   });
