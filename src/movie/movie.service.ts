@@ -13,7 +13,7 @@ import { join } from 'path';
 import { rename } from 'fs/promises';
 import { User } from 'src/user/entity/user.entity';
 import { MovieUserLike } from './entity/movie-user-like.entity';
-import { Cache, CACHE_MANAGER } from '@nestjs/cache-manager';
+import { CACHE_MANAGER, Cache } from '@nestjs/cache-manager';
 
 @Injectable()
 export class MovieService {
@@ -56,15 +56,30 @@ export class MovieService {
     return data;
   }
 
-  async findAll(dto: GetMoviesDto, userId) {
-    // const {title, take, page} = dto;
-    const {title} = dto;
-
-    const qb = await this.movieRepository.createQueryBuilder('movie')
+  /* istanbul ignore next */
+  async getMovies() {
+    return this.movieRepository.createQueryBuilder('movie')
     .leftJoinAndSelect('movie.detail', 'detail')
     .leftJoinAndSelect('movie.director', 'director')
     .leftJoinAndSelect('movie.genres', 'genres')
     .leftJoinAndSelect('movie.creator', 'creator');
+  }
+
+  /* istanbul ignore next */
+  async getLikedMovies(movieIds: number[], userId: number) {
+    return this.movieUserLikeRepository.createQueryBuilder('mul')
+      .leftJoinAndSelect('mul.user', 'user')
+      .leftJoinAndSelect('mul.movie', 'movie')
+      .where('movie.id IN (:...movieIds)', {movieIds})
+      .andWhere('user.id = :userId', {userId})
+      .getMany();
+  }
+
+  async findAll(dto: GetMoviesDto, userId?: number) {
+    // const {title, take, page} = dto;
+    const {title} = dto;
+
+    const qb = await this.getMovies();
 
     if(title){
       qb.where('movie.title LIKE :title', {title: `%${title}%`});
@@ -74,16 +89,11 @@ export class MovieService {
     //   this.commonService.applyPagePaginationParamsToQb(qb, dto);
     // }
 
-    const {nextCursor}  = await this.commonService.applyCursorPaginationParamsToQb(qb, dto);
-    let [data, count] = await qb.getManyAndCount();
+    const {nextCursor} = await this.commonService.applyCursorPaginationParamsToQb(qb, dto);
+    let [data, count]  = await qb.getManyAndCount();
 
     const movieIds    = data.map(movie => movie.id);
-    const likedMovies = movieIds.length < 1 ? [] : await this.movieUserLikeRepository.createQueryBuilder('mul')
-      .leftJoinAndSelect('mul.user', 'user')
-      .leftJoinAndSelect('mul.movie', 'movie')
-      .where('movie.id IN (:...movieIds)', {movieIds})
-      .andWhere('user.id = :userId', {userId})
-      .getMany();
+    const likedMovies = movieIds.length < 1 || !userId ? [] : await this.getLikedMovies(movieIds, userId);
 
     const likedMovieMap = likedMovies.reduce((acc, next) => ({
       ...acc,
