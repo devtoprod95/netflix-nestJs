@@ -67,10 +67,9 @@ export class MovieController {
       exceptionFactory(error) {
         throw new BadRequestException('숫자를 입력하세요.');
       }
-    })) id: number,
-    @UserId() userId
+    })) id: number
   ) {
-    return this.movieService.findOne(id, userId)
+    return this.movieService.findOne(id)
   }
 
   @Post()

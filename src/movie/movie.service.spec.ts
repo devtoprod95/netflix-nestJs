@@ -1,5 +1,5 @@
 import { MovieService } from './movie.service';
-import { DataSource, Repository } from 'typeorm';
+import { DataSource, In, QueryRunner, Repository } from 'typeorm';
 import { Movie } from './entity/movie.entity';
 import { TestBed } from '@automock/jest';
 import { CACHE_MANAGER, Cache } from '@nestjs/cache-manager';
@@ -11,6 +11,8 @@ import { User } from 'src/user/entity/user.entity';
 import { MovieDetail } from './entity/movie-detail.entity';
 import { MovieUserLike } from './entity/movie-user-like.entity';
 import { GetMoviesDto } from './dto/get-movies.dto';
+import { ConflictException, NotFoundException } from '@nestjs/common';
+import { CreateMovieDto } from './dto/create-movie.dto';
 
 describe('MovieService', () => {
   let movieService           : MovieService;
@@ -133,5 +135,138 @@ describe('MovieService', () => {
         count: 1
       });
     });
+  });
+
+  describe("findOne", () => {
+    let findMovieDetailMock: jest.SpyInstance;
+
+    beforeEach(() => {
+      findMovieDetailMock = jest.spyOn(movieService, "findMovieDetail");
+    });
+
+    it('should findOne', async() => {
+      const movie = {
+        id: 1,
+        title: "test"
+      };
+
+      findMovieDetailMock.mockResolvedValue(movie);
+
+      const result = await movieService.findOne(movie.id);
+
+      expect(findMovieDetailMock).toHaveBeenCalledWith(movie.id);
+      expect(result).toEqual(movie);
+    });
+    
+    it('should findOne erorr', async() => {
+      const movie = {
+        id: 1,
+        title: "test"
+      };
+
+      findMovieDetailMock.mockResolvedValue(null);
+
+      expect(movieService.findOne(movie.id)).rejects.toThrow(NotFoundException);
+      expect(findMovieDetailMock).toHaveBeenCalledWith(movie.id);
+    });
+  });
+
+  describe('create', () => {
+    let qr                          : jest.Mocked<QueryRunner>;
+    let createMovieDetailMock       : jest.SpyInstance;
+    let createMovieMock             : jest.SpyInstance;
+    let createMovieGenreRelationMock: jest.SpyInstance;
+    let renameMovieThumbnailMock    : jest.SpyInstance;
+
+    beforeEach(() => {
+      qr = {
+        manager: {
+          findOne: jest.fn(),
+          find: jest.fn(),
+        }
+      } as any as jest.Mocked<QueryRunner>;
+
+      createMovieDetailMock        = jest.spyOn(movieService, 'createMovieDetail');
+      createMovieMock              = jest.spyOn(movieService, 'createMovie');
+      createMovieGenreRelationMock = jest.spyOn(movieService, 'createMovieGenreRelation');
+      renameMovieThumbnailMock     = jest.spyOn(movieService, 'renameMovieThumbnail');
+    });
+
+    const createMovieDto: CreateMovieDto = {
+      title: 'new movie',
+      directorId: 1,
+      genreIds: [1, 2],
+      description: 'good movie',
+      thumbnail: 'test.jpg'
+    };
+    const userId = 1;
+    const director = {
+      id: 1,
+      name: 'director'
+    } as Director;
+    const genres = [
+      {
+        id: 1,
+        name: 'genre1'
+      },
+      {
+        id: 2,
+        name: 'genre2'
+      }
+    ] as Genre[];
+    const movieDetailInsertResult = {identifiers: [{id: 1}]};
+    const movieInsertResult       = {identifiers: [{id: 1}]};
+    const createMovieResult       = {...createMovieDto, id: 1};
+    it('create', async() => {
+      (qr.manager.findOne as any).mockResolvedValueOnce(director);
+      (qr.manager.find as any).mockResolvedValueOnce(genres);
+      (qr.manager.findOne as any).mockResolvedValueOnce(null);
+      (qr.manager.findOne as any).mockResolvedValueOnce(createMovieResult);
+
+      createMovieDetailMock.mockResolvedValue(movieDetailInsertResult);
+      createMovieMock.mockResolvedValue(movieInsertResult);
+      createMovieGenreRelationMock.mockResolvedValue(undefined);
+      renameMovieThumbnailMock.mockResolvedValue(undefined);
+
+      const result = await movieService.create(createMovieDto, userId, qr);
+
+      expect(qr.manager.findOne).toHaveBeenCalledWith(Director, {
+        where: {
+          id: createMovieDto.directorId
+        }
+      });
+      expect(qr.manager.find).toHaveBeenCalledWith(Genre, {
+        where: {
+          id: In(createMovieDto.genreIds)
+        }
+      });
+      expect(createMovieDetailMock).toHaveBeenCalledWith(qr, createMovieDto);
+      expect(createMovieMock).toHaveBeenCalledWith(qr, createMovieDto, director, movieDetailInsertResult.identifiers[0].id, userId, expect.any(String));
+      expect(createMovieGenreRelationMock).toHaveBeenCalledWith(qr, movieInsertResult.identifiers[0].id, genres);
+      expect(renameMovieThumbnailMock).toHaveBeenCalledWith(expect.any(String), expect.any(String), createMovieDto);
+      expect(result).toEqual(createMovieResult);
+    });
+
+    it('create error empty director', async() => {
+      (qr.manager.findOne as any).mockResolvedValueOnce(null);
+      await expect(movieService.create(createMovieDto, userId, qr)).rejects.toThrow(NotFoundException);
+    });
+
+    it('create error empty genres', async() => {
+      const emptyGenres = [];
+      (qr.manager.findOne as any).mockResolvedValueOnce(director);
+      (qr.manager.find as any).mockResolvedValueOnce(emptyGenres);
+      await expect(movieService.create(createMovieDto, userId, qr)).rejects.toThrow(NotFoundException);
+    });
+
+    it('create error not empty movie', async() => {
+      (qr.manager.findOne as any).mockResolvedValueOnce(director);
+      (qr.manager.find as any).mockResolvedValueOnce(genres);
+      (qr.manager.findOne as any).mockResolvedValueOnce(true);
+
+      createMovieDetailMock.mockResolvedValue(movieDetailInsertResult);
+      await expect(movieService.create(createMovieDto, userId, qr)).rejects.toThrow(ConflictException);
+    });
+
   });
 });
