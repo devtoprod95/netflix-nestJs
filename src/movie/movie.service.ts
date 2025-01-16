@@ -227,6 +227,34 @@ export class MovieService {
     });
   }
 
+  /* istanbul ignore next */
+  async updateMovie(qr: QueryRunner, movieUpdaetFields: UpdateMovieDto, id: number){
+    return qr.manager.createQueryBuilder()
+      .update(Movie)
+      .set(movieUpdaetFields)
+      .where('id = :id', { id })
+      .execute();
+  }
+
+  /* istanbul ignore next */
+  async updateMovieDetail(qr: QueryRunner, description: string, movie: Movie){
+    return qr.manager.createQueryBuilder()
+      .update(MovieDetail)
+      .set({
+        description: description
+      })
+      .where('id = :id', {id: movie.detail.id})
+      .execute();
+  }
+
+  /* istanbul ignore next */
+  async updateMovieGenreRelation(qr: QueryRunner, newGenres: Genre[], movie: Movie, id: number){
+    return qr.manager.createQueryBuilder()
+      .relation(Movie, 'genres')
+      .of(id)
+      .addAndRemove(newGenres.map(genre => genre.id), movie.genres.map(genre => genre.id));
+  }
+
   async update(id: number, updateMovieDto: UpdateMovieDto) {
     const qr = this.dataSource.createQueryRunner();
     await qr.connect();
@@ -276,28 +304,16 @@ export class MovieService {
         ...movieRest,
         ...(newDirector && { director: newDirector })
       };
-      await qr.manager.createQueryBuilder()
-      .update(Movie)
-      .set(movieUpdaetFields)
-      .where('id = :id', { id })
-      .execute()
+      await this.updateMovie(qr, movieUpdaetFields, id);
   
       if(description) {
-        await qr.manager.createQueryBuilder()
-        .update(MovieDetail)
-        .set({
-          description: description
-        })
-        .where('id = :id', {id: movie.detail.id})
-        .execute();
+        await this.updateMovieDetail(qr, description, movie);
       }
 
       if(newGenres) {
-        await qr.manager.createQueryBuilder()
-          .relation(Movie, 'genres')
-          .of(id)
-          .addAndRemove(newGenres.map(genre => genre.id), movie.genres.map(genre => genre.id));
+        await this.updateMovieGenreRelation(qr, newGenres, movie, id);
       }
+     
       await qr.commitTransaction();
 
       return this.movieRepository.findOne({
