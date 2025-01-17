@@ -347,6 +347,17 @@ export class MovieService {
     return id;
   }
 
+  /* istanbul ignore next */
+  async insertMovieUserLike(qr: QueryRunner, movieId: number, userId: number, isLike: boolean){
+    return qr.manager.createQueryBuilder()
+      .insert()
+      .into(MovieUserLike)
+      .values({
+        movieId, userId, isLike
+      })
+      .execute();
+  }
+
   async toggleMovieLike(movieId: number, userId: number, isLike: boolean, qr: QueryRunner) {
     const movie = await this.movieRepository.findOne({
       where: {
@@ -388,13 +399,7 @@ export class MovieService {
         });
       }
     } else {
-      await qr.manager.createQueryBuilder()
-        .insert()
-        .into(MovieUserLike)
-        .values({
-          movieId, userId, isLike
-        })
-        .execute();
+      await this.insertMovieUserLike(qr, movieId, userId, isLike);
     }
 
     const result = await this.movieUserLikeRepository.findOne({
