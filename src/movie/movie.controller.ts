@@ -63,11 +63,12 @@ export class MovieController {
   @Get(':id')
   @RBAC(Role.user)
   getMovie(
-    @Param('id', new ParseIntPipe({
-      exceptionFactory(error) {
-        throw new BadRequestException('숫자를 입력하세요.');
-      }
-    })) id: number
+    // @Param('id', new ParseIntPipe({
+    //   exceptionFactory(error) {
+    //     throw new BadRequestException('숫자를 입력하세요.');
+    //   }
+    // })) id: number
+    @Param('id', ParseIntPipe) id: number,
   ) {
     return this.movieService.findOne(id)
   }
