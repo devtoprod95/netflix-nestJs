@@ -600,7 +600,7 @@ describe('MovieService', () => {
         }
       });
     });
-
+ 
     it('should success like insert', async() => {
       const isLike     = true;
       const resultMock = {isLike: isLike};
