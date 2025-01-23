@@ -10,6 +10,11 @@ import { MovieUserLike } from "./entity/movie-user-like.entity";
 import { MovieService } from "./movie.service";
 import { CommonService } from "src/common/common.service";
 import { DataSource } from "typeorm";
+import { describe } from "node:test";
+import { GetMoviesDto } from "./dto/get-movies.dto";
+import { CreateMovieDto } from "./dto/create-movie.dto";
+import { UpdateMovieDto } from "./dto/update-movie.dto";
+import { NotFoundException } from "@nestjs/common";
 
 describe('MovieService - Integration Test', () => {
     let service     : MovieService;
@@ -137,6 +142,179 @@ describe('MovieService - Integration Test', () => {
             const cachedData = await cacheManager.get('MOVIE_RECENT');
 
             expect(cachedData).toEqual(cachedData);
+        });
+    });
+
+    describe('findAll', () => {
+        it('should return movies with correct titles', async() => {
+            const dto: GetMoviesDto = {
+                title: 'Movie 15',
+                order: ['createdAt_DESC'],
+                take : 10,
+            };
+
+            const result = await service.findAll(dto);
+
+            expect(result.data).toHaveLength(1);
+            expect(result.data[0].title).toEqual(dto.title);
+            expect(result.data[0]).not.toHaveProperty('isLike');
+        });
+
+        it('should return likeStatus if userId as provied', async() => {
+            const dto: GetMoviesDto = {
+                order: ['createdAt_ASC'],
+                take : 10,
+            };
+            const result = await service.findAll(dto, users[0].id);
+
+            expect(result.data).toHaveLength(10);
+            expect(result.data[0]).toHaveProperty('isLike');
+        });
+    });
+
+    describe('findOne', () => {
+        it('should findOne movie', async() => {
+            const movieId = movies[0].id;
+
+            const result = await service.findOne(movieId);
+
+            expect(result.id).toEqual(movieId);
+        });
+
+        it('should throw error if empty movie', async() => {
+            const movieId = 9999;
+
+            await expect(service.findOne(movieId)).rejects.toThrow(NotFoundException);
+        });
+    });
+
+    describe('create', () => {
+        beforeEach(() => {
+            jest.spyOn(service, 'renameMovieThumbnail').mockResolvedValue();
+        });
+
+        it('should create movie correctly', async() => {
+            const createMovieDto: CreateMovieDto = {
+                title      : 'Test Movie',
+                description: 'A Test Movie Detail',
+                directorId : directors[0].id,
+                genreIds   : genres.map(x => x.id),
+                thumbnail  : 'test.mp4',
+            };
+
+            const result = await service.create(createMovieDto, users[0].id, dataSource.createQueryRunner());
+
+            expect(result.title).toEqual(createMovieDto.title);
+            expect(result.director.id).toEqual(createMovieDto.directorId);
+            expect(result.genres.map(x => x.id)).toEqual(createMovieDto.genreIds);
+            expect(result.detail.description).toEqual(createMovieDto.description);
+        });
+    });
+
+    describe('update', () => { 
+        it('should update movie correctly', async() => {
+            const movieId = movies[0].id;
+
+            const updateMovieDto: UpdateMovieDto = {
+                title      : 'Changed Title',
+                description: 'Changed Description',
+                directorId : directors[0].id,
+                genreIds   : [genres[0].id],
+            };
+
+            const result = await service.update(movieId, updateMovieDto);
+
+            expect(result.title).toBe(updateMovieDto.title);
+            expect(result.detail.description).toBe(updateMovieDto.description);
+            expect(result.director.id).toBe(updateMovieDto.directorId);
+            expect(result.genres.map(x => x.id)).toEqual(updateMovieDto.genreIds);
+        });
+
+        it('should throw error if movie does not exist', async() => {
+            const updateMovieDto: UpdateMovieDto = {
+                title: 'Changed Title'
+            };
+            await expect(service.update(9999, updateMovieDto)).rejects.toThrow(NotFoundException);
+        });
+
+        it('should throw error if director does not exist', async() => {
+            const updateMovieDto: UpdateMovieDto = {
+                title      : 'Changed Title',
+                description: 'Changed Description',
+                directorId : 9999,
+                genreIds   : [genres[0].id],
+            };
+            await expect(service.update(movies[0].id, updateMovieDto)).rejects.toThrow(NotFoundException);
+        });
+
+        it('should throw error if genres does not exist', async() => {
+            const updateMovieDto: UpdateMovieDto = {
+                title      : 'Changed Title',
+                description: 'Changed Description',
+                directorId : directors[0].id,
+                genreIds   : [99, 98],
+            };
+            await expect(service.update(movies[0].id, updateMovieDto)).rejects.toThrow(NotFoundException);
+        });
+    });
+
+    describe('remove', () => { 
+        it('should remove movie correctly', async() => {
+            const movieId = movies[0].id;
+
+            const result = await service.remove(movieId);
+
+            expect(result).toBe(movieId);
+        });
+
+        it('should throw error if empty movie', async() => {
+            const movieId = 9999;
+
+            await expect(service.remove(movieId)).rejects.toThrow(NotFoundException);
+        });
+    });
+
+    describe('toggleMovieLike', () => {
+        it('should create like correctly', async() => {
+           const userId  = users[0].id;
+           const movieId = movies[0].id;
+           const isLike  = true;
+
+           const result = await service.toggleMovieLike(movieId, userId, isLike, dataSource.createQueryRunner());
+
+           expect(result).toEqual({isLike});
+        });
+
+        it('should create dislike correctly', async() => {
+            const userId  = users[0].id;
+            const movieId = movies[0].id;
+            const isLike  = false;
+
+            const result = await service.toggleMovieLike(movieId, userId, isLike, dataSource.createQueryRunner());
+
+            expect(result).toEqual({isLike});
+        });
+
+        it('should toggle like correctly', async() => {
+            const userId  = users[0].id;
+            const movieId = movies[0].id;
+            const isLike  = true;
+ 
+            await service.toggleMovieLike(movieId, userId, isLike, dataSource.createQueryRunner());
+            const result = await service.toggleMovieLike(movieId, userId, isLike, dataSource.createQueryRunner());
+ 
+            expect(result).toEqual({isLike: null});
+        });
+
+        it('should toggle dislike correctly', async() => {
+            const userId  = users[0].id;
+            const movieId = movies[0].id;
+            const isLike  = false;
+ 
+            await service.toggleMovieLike(movieId, userId, isLike, dataSource.createQueryRunner());
+            const result = await service.toggleMovieLike(movieId, userId, isLike, dataSource.createQueryRunner());
+ 
+            expect(result).toEqual({isLike: null});
         });
     });
 });

@@ -100,10 +100,12 @@ export class MovieService {
       [next.movie.id]: next.isLike
     }), {});
 
-    data = data.map((e) => ({
-      ...e,
-      isLike: e.id in likedMovieMap ? likedMovieMap[e.id] : null
-    }));
+    if( userId ){
+      data = data.map((e) => ({
+        ...e,
+        isLike: e.id in likedMovieMap ? likedMovieMap[e.id] : null
+      }));
+    }
 
     return {
       data,
@@ -228,10 +230,10 @@ export class MovieService {
   }
 
   /* istanbul ignore next */
-  async updateMovie(qr: QueryRunner, movieUpdaetFields: UpdateMovieDto, id: number){
+  async updateMovie(qr: QueryRunner, movieUpdateFields: UpdateMovieDto, id: number){
     return qr.manager.createQueryBuilder()
       .update(Movie)
-      .set(movieUpdaetFields)
+      .set(movieUpdateFields)
       .where('id = :id', { id })
       .execute();
   }
@@ -300,11 +302,11 @@ export class MovieService {
         newGenres = genres;
       }
   
-      const movieUpdaetFields = {
+      const movieUpdateFields = {
         ...movieRest,
         ...(newDirector && { director: newDirector })
       };
-      await this.updateMovie(qr, movieUpdaetFields, id);
+      await this.updateMovie(qr, movieUpdateFields, id);
   
       if(description) {
         await this.updateMovieDetail(qr, description, movie);
