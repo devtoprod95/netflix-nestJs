@@ -10,6 +10,8 @@ import { Movie } from './entity/movie.entity';
 import { DataSource } from 'typeorm';
 import { MovieUserLike } from './entity/movie-user-like.entity';
 import { AuthService } from 'src/auth/auth.service';
+import { CreateMovieDto } from './dto/create-movie.dto';
+import { UpdateMovieDto } from './dto/update-movie.dto';
 
 describe('MovieController (e2e)', () => {
   let app: INestApplication;
@@ -153,6 +155,62 @@ describe('MovieController (e2e)', () => {
         .set('Authorization', `Bearer ${token}`);
       
       expect(statusCode).toBe(404);
+    });
+  });
+
+  describe('[POST /movie]', () => {
+    it('should create movie', async() => {
+      const { body: { fileName }, statusCode: statusCode1, error: error1 } = await request(app.getHttpServer())
+      .post(`/common/thumbnail`)
+      .set('Authorization', `Bearer ${token}`)
+      .attach('thumbnail', Buffer.from('test'), 'testThumb.jpg')
+      .expect(201);
+
+      const dto: CreateMovieDto = {
+        title: 'TEST MOVIE',
+        description: 'Test Movie description',
+        directorId: directors[0].id,
+        genreIds: genres.map(x => x.id),
+        thumbnail: fileName
+      }
+
+      const { body, statusCode: statusCode2, error: error2 } = await request(app.getHttpServer())
+      .post(`/movie`)
+      .set('Authorization', `Bearer ${token}`)
+      .send(dto);
+
+      expect(statusCode2).toBe(201);
+      expect(body).toBeDefined();
+      expect(body.title).toEqual(dto.title);
+      expect(body.detail.description).toEqual(dto.description);
+      expect(body.director.id).toEqual(dto.directorId);
+      expect(body.genres.map(x => x.id)).toEqual(dto.genreIds);
+      expect(body.thumbnail).toContain(dto.thumbnail);
+    });
+  });
+
+  describe('[PATCH /movie/{id}]', () => {
+    it('should update movie if exists', async() => {
+      const dto: UpdateMovieDto = {
+        title: 'Update Test Movie',
+        description: 'Update Test Movie Desc',
+        directorId: directors[0].id,
+        genreIds: [genres[0].id],
+      }
+
+      const movieId = movies[0].id;
+
+      const { body, statusCode, error } = await request(app.getHttpServer())
+      .patch(`/movie/${movieId}`)
+      .set('Authorization', `Bearer ${token}`)
+      .send(dto);
+
+      expect(statusCode).toBe(200);
+      expect(body).toBeDefined();
+      expect(body.title).toEqual(dto.title);
+      expect(body.detail.description).toEqual(dto.description);
+      expect(body.director.id).toEqual(dto.directorId);
+      expect(body.genres.map(x => x.id)).toEqual(dto.genreIds);
     });
   });
 });

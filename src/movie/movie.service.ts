@@ -275,14 +275,14 @@ export class MovieService {
   
       let newDirector;
       if( directorId ){
-        const director = await qr.manager.findOne(MovieDetail, {
+        const director = await qr.manager.findOne(Director, {
           where: {
             id: directorId
           }
         });
     
         if( !director ){
-          throw new NotFoundException("존재하지 않는 감독 ID입니다.");
+          throw new NotFoundException(`존재하지 않는 감독 ID입니다. ${directorId}`);
         }
   
         newDirector = director;
