@@ -404,7 +404,7 @@ export class MovieService {
       await this.insertMovieUserLike(qr, movieId, userId, isLike);
     }
 
-    const result = await this.movieUserLikeRepository.findOne({
+    const result = await qr.manager.findOne(MovieUserLike, {
       where: {
         movieId,
         userId

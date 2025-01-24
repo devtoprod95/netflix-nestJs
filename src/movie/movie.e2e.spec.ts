@@ -213,4 +213,81 @@ describe('MovieController (e2e)', () => {
       expect(body.genres.map(x => x.id)).toEqual(dto.genreIds);
     });
   });
+
+  describe('[DELETE /movie/{id}', () => {
+    it('should delete existing movie', async() => {
+      const movieId = movies[0].id;
+
+      const { text, statusCode, error } = await request(app.getHttpServer())
+      .delete(`/movie/${movieId}`)
+      .set('Authorization', `Bearer ${token}`);
+
+      expect(statusCode).toBe(200);
+      expect(text).toBe(movieId.toString());
+    });
+
+    it('should throw 404 error if empty movie', async() => {
+      const movieId = 9999;
+
+      const { body, statusCode } = await request(app.getHttpServer())
+      .delete(`/movie/${movieId}`)
+      .set('Authorization', `Bearer ${token}`);
+
+      expect(statusCode).toBe(404);
+    });
+  });
+
+  describe('[POST /movie/{id}/like]', () => {
+    it('should like a movie', async() => {
+      const movieId = movies[1].id;
+
+      const { statusCode, body, error } = await request(app.getHttpServer())
+      .post(`/movie/${movieId}/like`)
+      .set('Authorization', `Bearer ${token}`);
+
+      expect(statusCode).toBe(201);
+
+      expect(body).toBeDefined();
+      expect(body.isLike).toBe(true);
+    });
+
+    it('should cancel like a movie', async() => {
+      const movieId = movies[1].id;
+
+      const { statusCode, body } = await request(app.getHttpServer())
+      .post(`/movie/${movieId}/like`)
+      .set('Authorization', `Bearer ${token}`);
+
+      expect(statusCode).toBe(201);
+
+      expect(body).toBeDefined();
+      expect(body.isLike).toBe(null);
+    });
+
+    it('should dislike a movie', async() => {
+      const movieId = movies[1].id;
+
+      const { statusCode, body, error } = await request(app.getHttpServer())
+      .post(`/movie/${movieId}/dislike`)
+      .set('Authorization', `Bearer ${token}`);
+
+      expect(statusCode).toBe(201);
+
+      expect(body).toBeDefined();
+      expect(body.isLike).toBe(false);
+    });
+
+    it('should cancel like a movie', async() => {
+      const movieId = movies[1].id;
+
+      const { statusCode, body } = await request(app.getHttpServer())
+      .post(`/movie/${movieId}/dislike`)
+      .set('Authorization', `Bearer ${token}`);
+
+      expect(statusCode).toBe(201);
+
+      expect(body).toBeDefined();
+      expect(body.isLike).toBe(null);
+    });
+  });
 });
