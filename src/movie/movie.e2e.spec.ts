@@ -4,25 +4,22 @@ import * as request from 'supertest';
 import { AppModule } from 'src/app.module';
 import { Director } from 'src/director/entity/director.entity';
 import { Genre } from 'src/genre/entity/genre.entity';
-import { User } from 'src/user/entity/user.entity';
+import { Role, User } from 'src/user/entity/user.entity';
 import { MovieDetail } from './entity/movie-detail.entity';
 import { Movie } from './entity/movie.entity';
 import { DataSource } from 'typeorm';
 import { MovieUserLike } from './entity/movie-user-like.entity';
+import { AuthService } from 'src/auth/auth.service';
 
 describe('MovieController (e2e)', () => {
   let app: INestApplication;
-  const userToken: string = `${process.env.USER_TOKEN}`;
+  let token: string;
   let dataSource  : DataSource;
 
   let users    : User[];
   let directors: Director[];
   let movies   : Movie[];
   let genres   : Genre[];
-
-  afterAll(async () => {
-    await app.close();
-  });
 
   beforeAll(async () => {
     const moduleFixture: TestingModule = await Test.createTestingModule({
@@ -59,7 +56,7 @@ describe('MovieController (e2e)', () => {
         (x) => userRepository.create({
             id: x,
             email: `${x}@test.com`,
-            password: '123123'
+            password: '$2b$10$hujyAKwxxPEYLIxFiuGMreZ3Qth85z1jKNTGwHpS2sbtVzkFOqi1G'
         })
     );
     await userRepository.save(users);
@@ -99,15 +96,63 @@ describe('MovieController (e2e)', () => {
         })
     );
     await movieRepository.save(movies);
+
+    let authService = moduleFixture.get<AuthService>(AuthService);
+    token = await authService.issueToken({id: users[0].id, role: Role.admin}, false);
+  });
+
+  afterAll(async () => {
+    await new Promise(resolve => setTimeout(resolve, 500));
+    await dataSource.destroy();
+    await app.close();
   });
 
   describe('[GET /movie]', () => {
     it('should get all movies', async() => {
       const { body, statusCode, error } = await request(app.getHttpServer())
         .get('/movie')
-        .set('Authorization', `Bearer ${userToken}`);
+        .set('Authorization', `Bearer ${token}`);
 
       expect(statusCode).toBe(200);
+      expect(body).toHaveProperty('data');
+      expect(body).toHaveProperty('nextCursor');
+      expect(body).toHaveProperty('count');
+
+      expect(body.data).toHaveLength(10);
+    });
+  });
+
+  describe('[GET /movie/recent]', () => {
+    it('should get recent movies', async() => {
+      const { body, statusCode, error } = await request(app.getHttpServer())
+        .get('/movie/recent')
+        .set('Authorization', `Bearer ${token}`);
+      
+      expect(statusCode).toBe(200);
+      expect(body).toHaveLength(10);
+    });
+  });
+
+  describe('[GET /movie/{id}]', () => {
+    it('should get movie by id', async() => {
+      const movieId = movies[0].id;
+
+      const { body, statusCode, error } = await request(app.getHttpServer())
+        .get(`/movie/${movieId}`)
+        .set('Authorization', `Bearer ${token}`);
+      
+      expect(statusCode).toBe(200);
+      expect(body.id).toEqual(movieId);
+    });
+
+    it('should throw 404 error if movie does not exit', async() => {
+      const movieId = 999999;
+
+      const { body, statusCode, error } = await request(app.getHttpServer())
+        .get(`/movie/${movieId}`)
+        .set('Authorization', `Bearer ${token}`);
+      
+      expect(statusCode).toBe(404);
     });
   });
 });
