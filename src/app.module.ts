@@ -66,6 +66,9 @@ import * as moment from 'moment-timezone';
           MovieUserLike
         ],
         synchronize: true,
+        ssl: {
+          rejectUnauthorized: false,
+        }
         // logging: configService.get<string>(envVariableKeys.ENV) === 'dev' ? ["query", "error"] : false,
       }),
       inject: [ConfigService],
