@@ -50,6 +50,7 @@
     "cache-manager": "^5.2.1",
     "class-transformer": "^0.5.1",
     "class-validator": "^0.14.1",
+    "dotenv": "^16.4.7",
     "joi": "^17.13.3",
     "moment-timezone": "^0.5.46",
     "nest-winston": "^1.9.7",
