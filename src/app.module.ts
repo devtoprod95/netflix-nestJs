@@ -46,6 +46,10 @@ import * as moment from 'moment-timezone';
         HASH_ROUNDS: Joi.number().required(),
         ACCESS_TOKEN_SECRET: Joi.string().required(),
         REFRESH_TOKEN_SECRET: Joi.string().required(),
+        AWS_SECRET_ACCESS_KEY: Joi.string().required(),
+        AWS_ACCESS_KEY_ID: Joi.string().required(),
+        AWS_REGION: Joi.string().required(),
+        BUCKET_NAME: Joi.string().required(),
       }),
     }),
     // forRootAsync는 비동기로 설정하며 ConfigModule가 완료되었을 때 실행되게 설정

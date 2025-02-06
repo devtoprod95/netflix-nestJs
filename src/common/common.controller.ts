@@ -1,11 +1,17 @@
 import { BadRequestException, Controller, Post, UploadedFile, UploadedFiles, UseInterceptors } from '@nestjs/common';
 import { FileFieldsInterceptor, FileInterceptor } from '@nestjs/platform-express';
 import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
+import { CommonService } from './common.service';
 
 @Controller('common')
 @ApiTags('Common')
 @ApiBearerAuth()
 export class CommonController {
+    constructor(
+        private readonly commonService: CommonService
+    ) {
+    }
+
     @Post('thumbnail')
     @UseInterceptors(FileInterceptor('thumbnail', {
         limits: {
@@ -24,6 +30,13 @@ export class CommonController {
     ) {
         return {
             fileName: thumbnail.filename
+        }
+    }
+
+    @Post('presigned-url')
+    async createPresignedUrl(){
+        return {
+            url: await this.commonService.createPresignedUrl(),
         }
     }
 }
