@@ -387,18 +387,18 @@ describe('MovieService', () => {
 
       const result = await movieService.update(movie.id, updateMovieDto);
 
-      expect(qr.manager.findOne).toHaveBeenCalledWith(Movie, {
+      expect(qr.manager.findOne).toHaveBeenNthCalledWith(1, Movie, {
         where: {
           id: movie.id
         },
         relations: ['detail', 'genres']
       });
-      expect(qr.manager.findOne).toHaveBeenCalledWith(MovieDetail, {
+      expect(qr.manager.findOne).toHaveBeenNthCalledWith(2, Director, {
         where: {
           id: updateMovieDto.directorId
         }
       });
-      expect(qr.manager.find).toHaveBeenCalledWith(Genre, {
+      expect(qr.manager.find).toHaveBeenNthCalledWith(1, Genre, {
         where: {
           id: In(updateMovieDto.genreIds)
         }
@@ -511,6 +511,7 @@ describe('MovieService', () => {
         manager: {
           delete: jest.fn(),
           update: jest.fn(),
+          findOne: jest.fn(),
         }
       } as any as jest.Mocked<QueryRunner>;
       insertMovieUserLikeMock = jest.spyOn(movieService, 'insertMovieUserLike');
@@ -522,7 +523,7 @@ describe('MovieService', () => {
     it('should success like delete', async() => {
       const movieUserLike = {movieId: 1, userId: 1, isLike: true} as MovieUserLike;
       const isLike        = true;
-      const resultMock    = {isLike: null};
+      const resultMock    = {isLike: undefined};
       findOneMovieMock.mockResolvedValueOnce(movie);
       findOneUserMock.mockResolvedValueOnce(user);
       findOneMovieUserLikeMock.mockResolvedValueOnce(movieUserLike);
@@ -568,7 +569,7 @@ describe('MovieService', () => {
       findOneUserMock.mockResolvedValueOnce(user);
       findOneMovieUserLikeMock.mockResolvedValueOnce(movieUserLike);
       (qr.manager.update as any).mockResolvedValueOnce(undefined);
-      findOneMovieUserLikeMock.mockResolvedValueOnce(resultMock);
+      (qr.manager.findOne as any).mockResolvedValueOnce(resultMock);
 
       const result = await movieService.toggleMovieLike(movie.id, user.id, isLike, qr);
 
@@ -608,7 +609,7 @@ describe('MovieService', () => {
       findOneUserMock.mockResolvedValueOnce(user);
       findOneMovieUserLikeMock.mockResolvedValueOnce(null);
       insertMovieUserLikeMock.mockResolvedValueOnce(undefined);
-      findOneMovieUserLikeMock.mockResolvedValueOnce(resultMock);
+      (qr.manager.findOne as any).mockResolvedValueOnce(resultMock);
 
       const result = await movieService.toggleMovieLike(movie.id, user.id, isLike, qr);
 
