@@ -36,7 +36,7 @@ import * as moment from 'moment-timezone';
       isGlobal: true, // 다른 모듈에서도 사용가능한 옵션
       envFilePath: process.env.NODE_ENV === 'test' ? '.env.test' : '.env',
       validationSchema: Joi.object({
-        ENV: Joi.string().valid('test', 'dev', 'production').required(),
+        ENV: Joi.string().valid('test', 'dev', 'prod').required(),
         DB_TYPE: Joi.string().valid('postgres').required(),
         DB_HOST: Joi.string().required(),
         DB_PORT: Joi.string().required(),

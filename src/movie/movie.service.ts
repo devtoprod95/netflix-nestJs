@@ -178,7 +178,7 @@ export class MovieService {
 
   /* istanbul ignore next */
   async renameMovieThumbnail(tempFolder: string, thumbnailPath: string, createMovieDto: CreateMovieDto){
-    if( this.configService.get<string>(envVariableKeys.ENV) === 'production' ){
+    if( this.configService.get<string>(envVariableKeys.ENV) === 'prod' ){
       return this.commonService.saveMovieToPermanentStoage(createMovieDto.thumbnail);
     } else {
       return rename(
