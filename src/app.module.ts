@@ -27,6 +27,7 @@ import { CacheModule } from '@nestjs/cache-manager';
 import { ThrottleInterceptor } from './common/interceptor/throttle.interceptor';
 import { ScheduleModule } from '@nestjs/schedule';
 import { WinstonModule } from 'nest-winston';
+import { ChatModule } from './chat/chat.module';
 import * as winston from 'winston'
 import * as moment from 'moment-timezone';
 
@@ -129,7 +130,8 @@ import * as moment from 'moment-timezone';
     DirectorModule,
     GenreModule,
     AuthModule,
-    UserModule
+    UserModule,
+    ChatModule
   ],
   providers: [
     {
