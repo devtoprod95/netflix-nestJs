@@ -30,6 +30,8 @@ import { WinstonModule } from 'nest-winston';
 import { ChatModule } from './chat/chat.module';
 import * as winston from 'winston'
 import * as moment from 'moment-timezone';
+import { Chat } from './chat/entity/chat.entity';
+import { ChatRoom } from './chat/entity/chat-room.entity';
 
 @Module({
   imports: [
@@ -68,7 +70,9 @@ import * as moment from 'moment-timezone';
           Director,
           Genre,
           User,
-          MovieUserLike
+          MovieUserLike,
+          Chat,
+          ChatRoom
         ],
         synchronize: configService.get<string>(envVariableKeys.ENV) === 'prod' ? false : true,
         ...(configService.get<string>(envVariableKeys.ENV) === 'prod' && {
