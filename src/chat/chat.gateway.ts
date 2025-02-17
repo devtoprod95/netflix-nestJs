@@ -2,7 +2,10 @@ import { ConnectedSocket, MessageBody, OnGatewayConnection, OnGatewayDisconnect,
 import { ChatService } from './chat.service';
 import { Socket } from 'socket.io';
 import { AuthService } from 'src/auth/auth.service';
-import { BadGatewayException } from '@nestjs/common';
+import { BadGatewayException, UseInterceptors } from '@nestjs/common';
+import { WsTransactionInterceptor } from 'src/common/interceptor/ws-transaction.interceptor';
+import { WsQueryRunner } from 'src/common/decorator/ws-query-runner.decorator';
+import { QueryRunner } from 'typeorm';
 
 @WebSocketGateway()
 export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
@@ -48,9 +51,11 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
   }
 
   @SubscribeMessage('sendMessage')
-  async sendMessage(
+  @UseInterceptors(WsTransactionInterceptor)
+  async handleMessage(
     @MessageBody() data: {message: string},
-    @ConnectedSocket() client: Socket
+    @ConnectedSocket() client: Socket,
+    @WsQueryRunner() qr: QueryRunner,
   ){
     client.emit('sendMessage', {
       ...data,
