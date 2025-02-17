@@ -16,12 +16,13 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
       const rawToken = client.handshake.headers.authorization;
       const payload  = await this.authService.parseBearerToken(rawToken, false);
 
-      if( payload ){
-        client.data.user = payload;
-      } else {
+      if( !payload ){
         throw new BadGatewayException('토큰이 유효하지 않습니다.');
       }
 
+      client.data.user = payload;
+      this.chatService.registerClient(payload.sub, client);
+      await this.chatService.joinUserRooms(payload, client);
     } catch (error) {
       console.log(error);
       client.disconnect();
@@ -29,7 +30,11 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
   }
   
   handleDisconnect(client: Socket) {
-    return;
+    const user = client.data.user;
+
+    if( user ){
+      this.chatService.removeClient(user.sub);
+    }
   }
 
   @SubscribeMessage('receiveMessage')
