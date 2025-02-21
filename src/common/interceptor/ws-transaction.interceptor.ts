@@ -16,7 +16,7 @@ export class WsTransactionInterceptor implements NestInterceptor{
         await qr.connect();
         await qr.startTransaction();
 
-        client.queryRunner = qr;
+        client.data.queryRunner = qr;
 
         return next.handle()
             .pipe(
