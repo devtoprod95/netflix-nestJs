@@ -8,6 +8,7 @@ import { v4 } from "uuid";
 import { TaskService } from "./task.service";
 import { TypeOrmModule } from "@nestjs/typeorm";
 import { Movie } from "src/movie/entity/movie.entity";
+import { BullModule } from "@nestjs/bullmq";
 
 @Module({
     imports: [
@@ -22,7 +23,18 @@ import { Movie } from "src/movie/entity/movie.entity";
         }),
         TypeOrmModule.forFeature([
           Movie
-        ])
+        ]),
+        BullModule.forRoot({
+          connection: {
+            host: 'redis-13946.c340.ap-northeast-2-1.ec2.redns.redis-cloud.com',
+            port: 13946,
+            username: 'default',
+            password: 'O4UvGzK1aC1bxRVHhj0HQSLGQYfIYNrL',
+          }
+        }),
+        BullModule.registerQueue({
+          name: 'thumbnail-generation',
+        })
     ],
     controllers: [CommonController],
     providers: [CommonService, TaskService],
