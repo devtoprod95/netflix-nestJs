@@ -19,11 +19,11 @@ export class CommonController {
     @Post('thumbnail')
     @UseInterceptors(FileInterceptor('thumbnail', {
         limits: {
-            fileSize: 20000000, // MB
+            fileSize: 200000000, // MB
         },
         fileFilter(req, file, callback) {
-            if (!file.mimetype.includes('image/') && file.mimetype.includes('mp4')) {
-            return callback(new BadRequestException('이미지 또는 mp4 형식만 업로드 가능합니다.'), false)
+            if (!file.mimetype.includes('image/') && !file.mimetype.includes('mp4')) {
+                return callback(new BadRequestException('이미지 또는 mp4 형식만 업로드 가능합니다.'), false)
             }
 
             callback(null, true);
