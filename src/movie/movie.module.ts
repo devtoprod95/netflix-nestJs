@@ -6,7 +6,7 @@ import { Movie } from './entity/movie.entity';
 import { MovieDetail } from './entity/movie-detail.entity';
 import { Director } from 'src/director/entity/director.entity';
 import { Genre } from 'src/genre/entity/genre.entity';
-import { CommonMudlue } from 'src/common/common.module';
+import { CommonModule } from 'src/common/common.module';
 import { MulterModule } from '@nestjs/platform-express';
 import { diskStorage } from 'multer';
 import { join } from 'path';
@@ -24,7 +24,7 @@ import { MovieUserLike } from './entity/movie-user-like.entity';
       User,
       MovieUserLike
     ]),
-    CommonMudlue,
+    CommonModule,
     MulterModule.register({
       storage: diskStorage({
         destination: join(process.cwd(), 'public', 'movie'),

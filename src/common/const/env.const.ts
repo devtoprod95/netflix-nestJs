@@ -12,6 +12,10 @@ const AWS_SECRET_ACCESS_KEY = 'AWS_SECRET_ACCESS_KEY';
 const AWS_ACCESS_KEY_ID     = 'AWS_ACCESS_KEY_ID';
 const AWS_REGION            = 'AWS_REGION';
 const BUCKET_NAME           = 'BUCKET_NAME';
+const REDIS_ENDPOINT        = 'REDIS_ENDPOINT';
+const REDIS_PORT            = 'REDIS_PORT';
+const REDIS_USER            = 'REDIS_USER';
+const REDIS_PASSWORD        = 'REDIS_PASSWORD';
 
 export const envVariableKeys = {
     ENV,
@@ -28,4 +32,8 @@ export const envVariableKeys = {
     AWS_ACCESS_KEY_ID,
     AWS_REGION,
     BUCKET_NAME,
+    REDIS_ENDPOINT,
+    REDIS_PORT,
+    REDIS_USER,
+    REDIS_PASSWORD,
 };

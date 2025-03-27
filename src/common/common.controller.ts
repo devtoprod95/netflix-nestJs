@@ -35,6 +35,13 @@ export class CommonController {
         await this.thumbnailQueue.add('thumbnail', {
             fileId: thumbnail.filename,
             filePath: thumbnail.path
+        }, {
+            priority: 1,
+            delay: 100,
+            attempts: 3,
+            lifo: true, // last in first out
+            removeOnComplete: true, // default false
+            removeOnFail: true, // default false
         });
 
         return {

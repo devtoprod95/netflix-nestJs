@@ -9,6 +9,8 @@ import { TaskService } from "./task.service";
 import { TypeOrmModule } from "@nestjs/typeorm";
 import { Movie } from "src/movie/entity/movie.entity";
 import { BullModule } from "@nestjs/bullmq";
+import { ConfigModule, ConfigService } from "@nestjs/config";
+import { envVariableKeys } from "./const/env.const";
 
 @Module({
     imports: [
@@ -24,13 +26,17 @@ import { BullModule } from "@nestjs/bullmq";
         TypeOrmModule.forFeature([
           Movie
         ]),
-        BullModule.forRoot({
-          connection: {
-            host: 'redis-13946.c340.ap-northeast-2-1.ec2.redns.redis-cloud.com',
-            port: 13946,
-            username: 'default',
-            password: 'O4UvGzK1aC1bxRVHhj0HQSLGQYfIYNrL',
-          }
+        BullModule.forRootAsync({
+          imports: [ConfigModule],
+          inject: [ConfigService],
+          useFactory: (configService: ConfigService) => ({
+            connection: {
+              host: configService.get<string>(envVariableKeys.REDIS_ENDPOINT),
+              port: configService.get<number>(envVariableKeys.REDIS_PORT),
+              username: configService.get<string>(envVariableKeys.REDIS_USER),
+              password: configService.get<string>(envVariableKeys.REDIS_PASSWORD),
+            }
+          }),
         }),
         BullModule.registerQueue({
           name: 'thumbnail-generation',
@@ -40,4 +46,4 @@ import { BullModule } from "@nestjs/bullmq";
     providers: [CommonService, TaskService],
     exports: [CommonService],
 })
-export class CommonMudlue{}
+export class CommonModule {} // 클래스 이름도 오타 수정 (CommonMudlue -> CommonModule)

@@ -54,6 +54,10 @@ import { WorkerModule } from './worker/worker.module';
         AWS_ACCESS_KEY_ID: Joi.string().required(),
         AWS_REGION: Joi.string().required(),
         BUCKET_NAME: Joi.string().required(),
+        REDIS_ENDPOINT: Joi.string().required(),
+        REDIS_PORT: Joi.string().required(),
+        REDIS_USER: Joi.string().required(),
+        REDIS_PASSWORD: Joi.string().required(),
       }),
     }),
     // forRootAsync는 비동기로 설정하며 ConfigModule가 완료되었을 때 실행되게 설정
