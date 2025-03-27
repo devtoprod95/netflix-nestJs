@@ -1,4 +1,4 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete, Query, UseInterceptors, ClassSerializerInterceptor, ParseIntPipe, BadRequestException, UseGuards, Request, UploadedFile, UploadedFiles } from '@nestjs/common';
+import { Controller, Get, Post, Body, Patch, Param, Delete, Query, UseInterceptors, ClassSerializerInterceptor, ParseIntPipe, BadRequestException, UseGuards, Request, UploadedFile, UploadedFiles, Req } from '@nestjs/common';
 import { MovieService } from './movie.service';
 import { CreateMovieDto } from './dto/create-movie.dto';
 import { UpdateMovieDto } from './dto/update-movie.dto';
@@ -65,7 +65,19 @@ export class MovieController {
     //   }
     // })) id: number
     @Param('id', ParseIntPipe) id: number,
+    @Req() request: any,
   ) {
+    const session = request.session;
+    
+    const movieCount = session.movieCount ?? {};
+
+    request.session.movieCount = {
+      ...movieCount,
+      [id]: movieCount[id] ? movieCount[id]+1 : 1
+    }
+
+    console.log(session);
+    
     return this.movieService.findOne(id)
   }
 

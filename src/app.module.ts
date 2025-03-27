@@ -55,7 +55,7 @@ import { WorkerModule } from './worker/worker.module';
         AWS_REGION: Joi.string().required(),
         BUCKET_NAME: Joi.string().required(),
         REDIS_ENDPOINT: Joi.string().required(),
-        REDIS_PORT: Joi.string().required(),
+        REDIS_PORT: Joi.number().required(),
         REDIS_USER: Joi.string().required(),
         REDIS_PASSWORD: Joi.string().required(),
       }),
