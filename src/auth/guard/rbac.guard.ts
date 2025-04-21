@@ -1,4 +1,4 @@
-import { CanActivate, ExecutionContext, Injectable } from "@nestjs/common";
+import { CanActivate, ExecutionContext, Injectable, UnauthorizedException } from "@nestjs/common";
 import { Reflector } from "@nestjs/core";
 import { Role } from "src/user/entity/user.entity";
 import { RBAC } from "../decorator/rbac.decorator";
@@ -20,10 +20,14 @@ export class RBACGuard implements CanActivate{
         const request = context.switchToHttp().getRequest();
         const user    = request.user;
 
-        if( !user ){
-            return false;
+        if(!user){
+            throw new UnauthorizedException('로그인이 필요합니다.');
         }
-
-        return user.role <= role;
+    
+        if(user.role > role){
+            throw new UnauthorizedException('접근 권한이 없습니다.');
+        }
+    
+        return true;
     }
 }
