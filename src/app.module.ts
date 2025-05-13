@@ -42,6 +42,7 @@ import { WorkerModule } from './worker/worker.module';
       validationSchema: Joi.object({
         ENV: Joi.string().valid('test', 'dev', 'prod').required(),
         DB_TYPE: Joi.string().valid('postgres').required(),
+        DB_URL: Joi.string().required(),
         DB_HOST: Joi.string().required(),
         DB_PORT: Joi.string().required(),
         DB_USERNAME: Joi.string().required(),
@@ -63,12 +64,13 @@ import { WorkerModule } from './worker/worker.module';
     // forRootAsync는 비동기로 설정하며 ConfigModule가 완료되었을 때 실행되게 설정
     TypeOrmModule.forRootAsync({
       useFactory:(configService: ConfigService) => ({
+        url: configService.get<string>(envVariableKeys.DB_URL),
         type: configService.get<string>(envVariableKeys.DB_TYPE) as 'postgres',
-        host: configService.get<string>(envVariableKeys.DB_HOST),
-        port: configService.get<number>(envVariableKeys.DB_PORT),
-        username: configService.get<string>(envVariableKeys.DB_USERNAME),
-        password: configService.get<string>(envVariableKeys.DB_PASSWORD),
-        database: configService.get<string>(envVariableKeys.DB_DATABASE),
+        // host: configService.get<string>(envVariableKeys.DB_HOST),
+        // port: configService.get<number>(envVariableKeys.DB_PORT),
+        // username: configService.get<string>(envVariableKeys.DB_USERNAME),
+        // password: configService.get<string>(envVariableKeys.DB_PASSWORD),
+        // database: configService.get<string>(envVariableKeys.DB_DATABASE),
         entities: [
           Movie,
           MovieDetail,
