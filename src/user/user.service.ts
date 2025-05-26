@@ -7,52 +7,81 @@ import { Repository } from 'typeorm';
 import * as bcrypt from 'bcrypt';
 import { ConfigService } from '@nestjs/config';
 import { envVariableKeys } from 'src/common/const/env.const';
+import { PrismaService } from 'src/common/prisma.sevice';
 
 @Injectable()
 export class UserService {
 
   constructor(
-    @InjectRepository(User)
-      private readonly userRepository: Repository<User>,
+      // @InjectRepository(User)
+      // private readonly userRepository: Repository<User>,
       private readonly configService: ConfigService,
+      private readonly prisma: PrismaService,
   ){}
 
-  async create(createUserDto: CreateUserDto): Promise<User> {
+  async create(createUserDto: CreateUserDto) {
     const { email, password } = createUserDto;
 
-    const user = await this.userRepository.findOne({
-        where: {
-            email
-        }
+    const user = await this.prisma.user.findUnique({
+      where: {
+        email
+      }
     });
+
+    // const user = await this.userRepository.findOne({
+    //     where: {
+    //         email
+    //     }
+    // });
+
     if( user ){
         throw new BadRequestException('이미 가입한 이메일 입니다.');
     }
 
     const hash = await bcrypt.hash(password, this.configService.get<number>(envVariableKeys.HASH_ROUNDS))
 
-    await this.userRepository.save({
+    await this.prisma.user.create({
+      data: {
         email,
         password: hash
+      }
     });
 
-    return await this.userRepository.findOne({
-        where: {
-            email
-        }
+    // await this.userRepository.save({
+    //     email,
+    //     password: hash
+    // });
+
+    return this.prisma.user.findUnique({
+      where: {
+        email
+      }
     });
+
+    // return await this.userRepository.findOne({
+    //     where: {
+    //         email
+    //     }
+    // });
   }
 
   findAll() {
-    return this.userRepository.find();
+    return this.prisma.user.findMany();
+    // return this.userRepository.find();
   }
 
   async findOne(id: number) {
-    const user = await this.userRepository.findOne({
+    const user = await this.prisma.user.findUnique({
       where: {
-        id: id
+        id
       }
     });
+
+    // const user = await this.userRepository.findOne({
+    //   where: {
+    //     id: id
+    //   }
+    // });
     if(!user){
       throw new NotFoundException('존재하지 않는 사용자압니다.');
     }
@@ -63,43 +92,69 @@ export class UserService {
   async update(id: number, updateUserDto: UpdateUserDto) {
     const { password } = updateUserDto;
 
-    const user = await this.userRepository.findOne({
+    // const user = await this.userRepository.findOne({
+    //   where: {
+    //     id: id
+    //   }
+    // });
+
+    const user = await this.prisma.user.findUnique({
       where: {
-        id: id
+        id
       }
-    });
+    })
     if(!user){
       throw new NotFoundException('존재하지 않는 사용자압니다.');
     }
 
     const hash = await bcrypt.hash(password, this.configService.get<number>(envVariableKeys.HASH_ROUNDS));
 
-    await this.userRepository.update(
-      {id},
-      {
+    await this.prisma.user.update({
+      where: {
+        id
+      },
+      data: {
         ...updateUserDto,
         password: hash
       }
-    );
-
-    return await this.userRepository.findOne({
-      where: {
-        id: id
-      }
     });
+
+    // await this.userRepository.update(
+    //   {id},
+    //   {
+    //     ...updateUserDto,
+    //     password: hash
+    //   }
+    // );
+
+    return this.prisma.user.findUnique({
+      where: {id}
+    });
+
+    // return await this.userRepository.findOne({
+    //   where: {
+    //     id: id
+    //   }
+    // });
   }
 
   async remove(id: number) {
-    const user = await this.userRepository.findOne({
-      where: {
-        id: id
-      }
+    const user = await this.prisma.user.findUnique({
+      where: {id}
     });
+    // const user = await this.userRepository.findOne({
+    //   where: {
+    //     id: id
+    //   }
+    // });
     if(!user){
       throw new NotFoundException('존재하지 않는 사용자압니다.');
     }
 
-    await this.userRepository.delete(id);
+    await this.prisma.user.delete({
+      where: {id}
+    });
+    // await this.userRepository.delete(id);
 
     return id;
   }

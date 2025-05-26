@@ -11,6 +11,7 @@ import { Movie } from "src/movie/entity/movie.entity";
 import { BullModule } from "@nestjs/bullmq";
 import { ConfigModule, ConfigService } from "@nestjs/config";
 import { envVariableKeys } from "./const/env.const";
+import { PrismaService } from "./prisma.sevice";
 
 @Module({
     imports: [
@@ -43,7 +44,7 @@ import { envVariableKeys } from "./const/env.const";
         })
     ],
     controllers: [CommonController],
-    providers: [CommonService, TaskService],
-    exports: [CommonService],
+    providers: [CommonService, TaskService, PrismaService],
+    exports: [CommonService, PrismaService],
 })
 export class CommonModule {} // 클래스 이름도 오타 수정 (CommonMudlue -> CommonModule)
