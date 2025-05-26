@@ -1,6 +1,6 @@
 datasource db {
     provider = "postgresql"
-    url     = env("DB_URL")
+    url      = env("DB_URL")
 }
 
 generator client {
@@ -55,4 +55,33 @@ model MovieDetail {
     id          Int     @id @default(autoincrement())
     description String  
     movie       Movie?
+}
+
+model Chat {
+    id              Int         @id @default(autoincrement())
+    author          User        @relation(fields: [authorId], references: [id])
+    authorId        Int
+    message         String
+    chatRoom        ChatRoom    @relation(fields: [chatRoomId], references: [id])
+    chatRoomId      Int
+}
+
+model ChatRoom {
+    id      Int     @id @default(autoincrement())
+    users   User[]
+    chats   Chat[]
+}
+
+model Genre {
+    id      Int     @id @default(autoincrement())
+    name    String  @unique
+    movies  Movie[]
+}
+
+model Director {
+    id              Int         @id @default(autoincrement())
+    name            String
+    dob             DateTime
+    nationality     String
+    movies          Movie[]
 }
