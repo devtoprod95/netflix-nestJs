@@ -6,6 +6,7 @@ export class CursorPaginationDto {
     @IsString()
     @IsOptional()
     // id_52,likeCount_20
+    // 52
     @ApiProperty({
         description: '페이지네이션 커서',
         example: 'eyJ2YWx1ZXMiOnsiaWQiOjF9LCJvcmRlciI6WyJpZF9kZXNjIl19'
@@ -31,5 +32,5 @@ export class CursorPaginationDto {
         description: '가져올 데이터 사이즈',
         example: 10
     })
-    take: number = 10;
+    take: number = 2;
 }

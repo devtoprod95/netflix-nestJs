@@ -17,6 +17,7 @@ import { CACHE_MANAGER, Cache } from '@nestjs/cache-manager';
 import { ConfigService } from '@nestjs/config';
 import { envVariableKeys } from 'src/common/const/env.const';
 import { PrismaService } from 'src/common/prisma.sevice';
+import { contains } from 'class-validator';
 
 @Injectable()
 export class MovieService {
@@ -79,50 +80,88 @@ export class MovieService {
 
   /* istanbul ignore next */
   async getLikedMovies(movieIds: number[], userId: number) {
-    return this.movieUserLikeRepository.createQueryBuilder('mul')
-      .leftJoinAndSelect('mul.user', 'user')
-      .leftJoinAndSelect('mul.movie', 'movie')
-      .where('movie.id IN (:...movieIds)', {movieIds})
-      .andWhere('user.id = :userId', {userId})
-      .getMany();
+    // return this.movieUserLikeRepository.createQueryBuilder('mul')
+    //   .leftJoinAndSelect('mul.user', 'user')
+    //   .leftJoinAndSelect('mul.movie', 'movie')
+    //   .where('movie.id IN (:...movieIds)', {movieIds})
+    //   .andWhere('user.id = :userId', {userId})
+    //   .getMany();
   }
 
   async findAll(dto: GetMoviesDto, userId?: number) {
-    // const {title, take, page} = dto;
-    const {title} = dto;
+    const {title, cursor, take, order} = dto;
 
-    const qb = await this.getMovies();
+    const orderBy = order.map((field) => {
+      const [column, direction] = field.split('_');
+      return {[column]: direction.toLocaleLowerCase()};
+    });
 
-    if(title){
-      qb.where('movie.title LIKE :title', {title: `%${title}%`});
-    }
+    const movies = await this.prisma.movie.findMany({
+      where: title ? {title: { contains: title }} : {},
+      take: take + 1,
+      skip: cursor ? 1: 0,
+      cursor: cursor ? { id: parseInt(cursor) } : undefined,
+      orderBy,
+      include: {
+        detail: true,
+        genres: true,
+        director: true,
+        creator: true
+      }
+    });
 
-    // if( take && page ){
-    //   this.commonService.applyPagePaginationParamsToQb(qb, dto);
+    const hasNextPage = movies.length > take;
+    if(hasNextPage) movies.pop();
+
+    const nextCursor = hasNextPage ? movies[movies.length - 1].id.toString() : null;
+
+    // const qb = await this.getMovies();
+    // if(title){
+    //   qb.where('movie.title LIKE :title', {title: `%${title}%`});
     // }
+    // const {nextCursor} = await this.commonService.applyCursorPaginationParamsToQb(qb, dto);
+    // let [data, count]  = await qb.getManyAndCount();
 
-    const {nextCursor} = await this.commonService.applyCursorPaginationParamsToQb(qb, dto);
-    let [data, count]  = await qb.getManyAndCount();
-
-    const movieIds    = data.map(movie => movie.id);
-    const likedMovies = movieIds.length < 1 || !userId ? [] : await this.getLikedMovies(movieIds, userId);
-
-    const likedMovieMap = likedMovies.reduce((acc, next) => ({
-      ...acc,
-      [next.movie.id]: next.isLike
-    }), {});
+    // const movieIds    = data.map(movie => movie.id);
+    // const likedMovies = movieIds.length < 1 || !userId ? [] : await this.getLikedMovies(movieIds, userId);
 
     if( userId ){
-      data = data.map((e) => ({
-        ...e,
-        isLike: e.id in likedMovieMap ? likedMovieMap[e.id] : null
-      }));
+      const movieIds = movies.map((movie) => movie.id);
+
+      const likedMovies = movieIds.length > 0 ? await this.prisma.movieUserLike.findMany({
+        where: {
+          movieId: {in: movieIds},
+          userId: userId,
+        },
+        include: {
+          movie: true
+        }
+      }) : [];
+
+      const likedMovieMap = likedMovies.reduce((acc, next) => ({
+        ...acc,
+        [next.movie.id]: next.isLike
+      }), {});
+
+      return {
+        data: movies.map((movie) => ({
+          ...movie,
+          likeStatue: movie.id in likedMovieMap ? likedMovieMap[movie.id] : null
+        })),
+        nextCursor,
+        hasNextPage
+      }
+
+      // data = data.map((e) => ({
+      //   ...e,
+      //   isLike: e.id in likedMovieMap ? likedMovieMap[e.id] : null
+      // }));
     }
 
     return {
-      data,
+      data: movies,
       nextCursor,
-      count
+      hasNextPage
     }
   }
 
