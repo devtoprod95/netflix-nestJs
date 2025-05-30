@@ -55,6 +55,9 @@ export class AuthService {
         const user = await this.prisma.user.findUnique({
             where: {
                 email
+            },
+            omit: {
+                password: false
             }
         });
         
@@ -63,7 +66,6 @@ export class AuthService {
         //         email
         //     }
         // });
-
         if( !user ){
             throw new BadRequestException('잘못된 로그인 정보입니다.');
         }
@@ -94,7 +96,6 @@ export class AuthService {
         const {email, password} = this.parseBasicToken(rawToken);
 
         const user = await this.authenticate(email, password);
-
         return {
             refreshToken: await this.issueToken(user, true),
             accessToken: await this.issueToken(user, false),
