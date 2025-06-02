@@ -191,32 +191,32 @@ export class MovieService {
 
   /* istanbul ignore next */
   async createMovie(qr: QueryRunner, createMovieDto: CreateMovieDto, director: Director, movieDetailId: number, userId: number, thumbnailPath: string){
-    // return qr.manager.createQueryBuilder()
-    // .insert()
-    // .into(Movie)
-    // .values({
-    //   title: createMovieDto.title,
-    //   detail: {
-    //     id: movieDetailId
-    //   },
-    //   director: director,
-    //   creator: {
-    //     id: userId
-    //   },
-    //   thumbnail: join(thumbnailPath, createMovieDto.thumbnail)
-    // })
-    // .execute();
+    return qr.manager.createQueryBuilder()
+    .insert()
+    .into(Movie)
+    .values({
+      title: createMovieDto.title,
+      detail: {
+        id: movieDetailId
+      },
+      director: director,
+      creator: {
+        id: userId
+      },
+      thumbnail: join(thumbnailPath, createMovieDto.thumbnail)
+    })
+    .execute();
   }
 
   /* istanbul ignore next */
   async createMovieDetail(qr: QueryRunner, createMovieDto: CreateMovieDto){
-    // return qr.manager.createQueryBuilder()
-    // .insert()
-    // .into(MovieDetail)
-    // .values({
-    //   description: createMovieDto.description
-    // })
-    // .execute();
+    return qr.manager.createQueryBuilder()
+    .insert()
+    .into(MovieDetail)
+    .values({
+      description: createMovieDto.description
+    })
+    .execute();
   }
 
   /* istanbul ignore next */
@@ -237,6 +237,58 @@ export class MovieService {
         join(process.cwd(), thumbnailPath, createMovieDto.thumbnail),
       )
     }
+  }
+
+  async createPrisma(createMovieDto: CreateMovieDto, userId: number){
+    return this.prisma.$transaction(async(prisma) => {
+      const director = await prisma.director.findUnique({
+        where: {
+          id: createMovieDto.directorId
+        }
+      });
+      if( !director ){
+        throw new NotFoundException("존재하지 않는 감독 ID입니다.");
+      }
+
+      const genres = await prisma.genre.findMany({
+        where: {
+          id: {
+            in: createMovieDto.genreIds
+          }
+        }
+      });
+      if( genres.length !== createMovieDto.genreIds.length ){
+        throw new NotFoundException(`존재하지 않는 장르가 있습니다. 존재하는 ids -> ${genres.map(genre => genre.id).join(',')}`);
+      }
+
+      const movieDetail = await prisma.movieDetail.create({
+        data: {
+          description: createMovieDto.description
+        }
+      });
+
+      const movie = await prisma.movie.create({
+        data: {
+          title: createMovieDto.title,
+          thumbnail: createMovieDto.thumbnail,
+          creator: { connect: {id: userId} },
+          director: { connect: {id: director.id} },
+          genres: { connect: genres.map((genre) => ({ id: genre.id })) },
+          detail: { connect: {id: movieDetail.id } },
+        }
+      });
+
+      return this.prisma.movie.findUnique({
+        where: {
+          id: movie.id
+        },
+        include: {
+          detail: true,
+          director: true,
+          genres: true,
+        }
+      });
+    });
   }
 
   async create(createMovieDto: CreateMovieDto, userId: number, qr: QueryRunner){

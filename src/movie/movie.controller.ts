@@ -86,11 +86,21 @@ export class MovieController {
   @UseInterceptors(TransactionInterceptor)
   postMovie(
     @Body() body: CreateMovieDto,
-    @QueryRunner() queryRunner: QR,
     @UserId() userId
   ) {
-    return this.movieService.create(body, userId, queryRunner);
+    return this.movieService.createPrisma(body, userId);
   }
+
+  // @Post()
+  // @RBAC(Role.admin)
+  // @UseInterceptors(TransactionInterceptor)
+  // postMovie(
+  //   @Body() body: CreateMovieDto,
+  //   @QueryRunner() queryRunner: QR,
+  //   @UserId() userId
+  // ) {
+  //   return this.movieService.create(body, userId, queryRunner);
+  // }
 
   @Patch(':id')
   @RBAC(Role.admin)
