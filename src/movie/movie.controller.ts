@@ -108,7 +108,7 @@ export class MovieController {
     @Param('id', ParseIntPipe) id: number,
     @Body() body: UpdateMovieDto
   ) {
-    return this.movieService.update(id, body);
+    return this.movieService.updatePrisma(id, body);
   }
 
   @Delete(':id')
