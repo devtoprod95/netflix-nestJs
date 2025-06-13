@@ -33,6 +33,7 @@ import * as moment from 'moment-timezone';
 import { Chat } from './chat/entity/chat.entity';
 import { ChatRoom } from './chat/entity/chat-room.entity';
 import { WorkerModule } from './worker/worker.module';
+import { MongooseModule } from '@nestjs/mongoose';
 
 @Module({
   imports: [
@@ -61,6 +62,7 @@ import { WorkerModule } from './worker/worker.module';
         REDIS_PASSWORD: Joi.string().required(),
       }),
     }),
+    MongooseModule.forRoot('mongodb+srv://test:test@nestjsmongo.v73neng.mongodb.net/?retryWrites=true&w=majority&appName=NestJsMongo'),
     // forRootAsync는 비동기로 설정하며 ConfigModule가 완료되었을 때 실행되게 설정
     TypeOrmModule.forRootAsync({
       useFactory:(configService: ConfigService) => ({
