@@ -3,6 +3,8 @@ import { Document, Types } from "mongoose";
 import { User } from "src/user/schema/user.schema";
 import { MovieUserLike } from "./movie-user-like.schema";
 import { MovieDetail } from "./movie-detail.schema";
+import { Genre } from "src/genre/schema/genre.schema";
+import { Director } from "src/director/schema/director.schema";
 
 @Schema({
     timestamps: true
