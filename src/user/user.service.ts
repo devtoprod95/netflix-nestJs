@@ -84,7 +84,7 @@ export class UserService {
   }
 
   async findOne(id: number) {
-    const user = await this.userModel.findById(id);
+    const user = await this.userModel.findById(id).exec();
     // const user = await this.prisma.user.findUnique({
     //   where: {
     //     id
@@ -112,7 +112,7 @@ export class UserService {
     //   }
     // });
 
-    const user = await this.userModel.findById(id);
+    const user = await this.userModel.findById(id).exec();
     // const user = await this.prisma.user.findUnique({
     //   where: {
     //     id
@@ -135,7 +135,7 @@ export class UserService {
       };
     }
 
-    await this.userModel.findByIdAndUpdate(id, input);
+    await this.userModel.findByIdAndUpdate(id, input).exec();
     // await this.prisma.user.update({
     //   where: {
     //     id
@@ -151,7 +151,7 @@ export class UserService {
     //   }
     // );
 
-    return this.userModel.findById(id);
+    return this.userModel.findById(id).exec();
     // return this.prisma.user.findUnique({
     //   where: {id}
     // });
@@ -164,7 +164,7 @@ export class UserService {
   }
 
   async remove(id: number) {
-    const user = await this.userModel.findById(id);
+    const user = await this.userModel.findById(id).exec();
     // const user = await this.prisma.user.findUnique({
     //   where: {id}
     // });
@@ -177,7 +177,7 @@ export class UserService {
       throw new NotFoundException('존재하지 않는 사용자압니다.');
     }
 
-    await this.userModel.findByIdAndDelete(id);
+    await this.userModel.findByIdAndDelete(id).exec();
     // await this.prisma.user.delete({
     //   where: {id}
     // });

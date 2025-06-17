@@ -23,7 +23,7 @@ import { Role } from "@prisma/client"
 //         ref: 'ChatRoom'
 //     }],
 // })
-import { Types } from "mongoose"
+import { Document, Types } from "mongoose"
 import { Prop, Schema, SchemaFactory } from "@nestjs/mongoose";
 import { Movie } from "src/movie/schema/movie.schema";
 import { MovieUserLike } from "src/movie/schema/movie-user-like.schema";
