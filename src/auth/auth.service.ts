@@ -8,7 +8,10 @@ import { envVariableKeys } from 'src/common/const/env.const';
 import { Cache, CACHE_MANAGER } from "@nestjs/cache-manager";
 import { UserService } from 'src/user/user.service';
 import { PrismaService } from 'src/common/prisma.sevice';
-import { Role, User } from '@prisma/client';
+import { Role } from '@prisma/client';
+import { InjectModel } from '@nestjs/mongoose';
+import { User } from 'src/user/schema/user.schema';
+import { Model } from 'mongoose';
 
 @Injectable()
 export class AuthService {
@@ -20,7 +23,9 @@ export class AuthService {
         private readonly jwtService: JwtService,
         @Inject(CACHE_MANAGER)
         private readonly cacheManager: Cache,
-        private readonly prisma: PrismaService
+        // private readonly prisma: PrismaService
+        @InjectModel(User.name)
+        private readonly userModel: Model<User>,
     ){}
 
     parseBasicToken(rawToken: string){
@@ -52,14 +57,19 @@ export class AuthService {
     }
 
     async authenticate(email: string, password: string){
-        const user = await this.prisma.user.findUnique({
-            where: {
-                email
-            },
-            omit: {
-                password: false
-            }
+        const user = await this.userModel.findOne({
+            email
+        }, {
+            password: 1
         });
+        // const user = await this.prisma.user.findUnique({
+        //     where: {
+        //         email
+        //     },
+        //     omit: {
+        //         password: false
+        //     }
+        // });
         
         // const user = await this.userRepository.findOne({
         //     where: {
@@ -78,12 +88,12 @@ export class AuthService {
         return user;
     }
 
-    async issueToken(user: {id: number, role: Role}, isRefreshToken: boolean){
+    async issueToken(user: {_id: any, role: Role}, isRefreshToken: boolean){
         const refreshTokenSecret = this.configService.get<string>(envVariableKeys.REFRESH_TOKEN_SECRET);
         const accressTokenSecret = this.configService.get<string>(envVariableKeys.ACCESS_TOKEN_SECRET);
 
         return await this.jwtService.signAsync({
-            sub: user.id,
+            sub: user._id,
             role: user.role,
             type: isRefreshToken ? 'refresh' : 'access'
         }, {
