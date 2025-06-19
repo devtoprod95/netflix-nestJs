@@ -13,7 +13,7 @@ export class Movie extends Document {
     @Prop({
         type: [{
             type: Types.ObjectId,
-            ref: 'User'    ,
+            ref: 'User',
             required: true
         }],
     })

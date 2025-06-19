@@ -88,7 +88,7 @@ export class MovieController {
     @Body() body: CreateMovieDto,
     @UserId() userId
   ) {
-    return this.movieService.createPrisma(body, userId);
+    return this.movieService.createMongoose(body, userId);
   }
 
   // @Post()
@@ -108,7 +108,7 @@ export class MovieController {
     @Param('id', ParseIntPipe) id: number,
     @Body() body: UpdateMovieDto
   ) {
-    return this.movieService.updatePrisma(id, body);
+    return this.movieService.updateMongoose(id, body);
   }
 
   @Delete(':id')
