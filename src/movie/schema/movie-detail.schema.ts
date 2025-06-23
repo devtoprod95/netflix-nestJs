@@ -11,13 +11,13 @@ export class MovieDetail extends Document {
     })
     description: string;
 
-    @Prop({
-        type: Types.ObjectId,
-        ref: 'Movie',
-        required: true,
-        unique: true
-    })
-    movie: Movie;
+    // @Prop({
+    //     type: Types.ObjectId,
+    //     ref: 'Movie',
+    //     required: true,
+    //     unique: true
+    // })
+    // movie: Movie;
 }
 
 export const MovieDetailSchema = SchemaFactory.createForClass(MovieDetail);

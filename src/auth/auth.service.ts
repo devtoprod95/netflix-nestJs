@@ -60,7 +60,8 @@ export class AuthService {
         const user = await this.userModel.findOne({
             email
         }, {
-            password: 1
+            password: 1,
+            role: 1
         });
         // const user = await this.prisma.user.findUnique({
         //     where: {

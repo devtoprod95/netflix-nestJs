@@ -1,6 +1,6 @@
 import { CanActivate, ExecutionContext, Injectable, UnauthorizedException } from "@nestjs/common";
 import { Reflector } from "@nestjs/core";
-import { Role } from "src/user/entity/user.entity";
+import { Role } from '@prisma/client';
 import { RBAC } from "../decorator/rbac.decorator";
 
 @Injectable()
@@ -23,8 +23,14 @@ export class RBACGuard implements CanActivate{
         if(!user){
             throw new UnauthorizedException('로그인이 필요합니다.');
         }
-    
-        if(user.role > role){
+
+        const roleAccessLevel = {
+            [Role.admin]: 0,
+            [Role.paiduser]: 1,
+            [Role.user]: 2,
+        }
+
+        if(roleAccessLevel[user.role] > roleAccessLevel[role]){
             throw new UnauthorizedException('접근 권한이 없습니다.');
         }
     

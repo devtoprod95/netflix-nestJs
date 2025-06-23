@@ -11,11 +11,9 @@ import { Director } from "src/director/schema/director.schema";
 })
 export class Movie extends Document {
     @Prop({
-        type: [{
-            type: Types.ObjectId,
-            ref: 'User',
-            required: true
-        }],
+        type: Types.ObjectId,
+        ref: 'User',
+        required: true
     })
     creator: User;
 
