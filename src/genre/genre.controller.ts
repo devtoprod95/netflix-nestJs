@@ -7,7 +7,7 @@ import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
 @Controller('genre')
 @ApiTags('Genre')
 @ApiBearerAuth()
-@UseInterceptors(ClassSerializerInterceptor)
+// @UseInterceptors(ClassSerializerInterceptor)
 export class GenreController {
   constructor(private readonly genreService: GenreService) {}
 
@@ -19,7 +19,7 @@ export class GenreController {
   }
 
   @Get(':id')
-  getMovie(@Param('id', ParseIntPipe) id: number) {
+  getMovie(@Param('id') id: string) {
     return this.genreService.findOne(id)
   }
 
@@ -32,7 +32,7 @@ export class GenreController {
 
   @Patch(':id')
   patchMovie(
-    @Param('id', ParseIntPipe) id: number,
+    @Param('id') id: string,
     @Body() body: UpdateGenreDto
   ) {
     return this.genreService.update(id, body);
@@ -40,7 +40,7 @@ export class GenreController {
 
   @Delete(':id')
   deleteMovie(
-    @Param('id', ParseIntPipe) id: number
+    @Param('id') id: string
   ) {
     return this.genreService.remove(id);
   }

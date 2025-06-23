@@ -24,7 +24,7 @@ export class GenreService {
     // return await this.genreRepository.find();
   }
 
-  async findOne(id: number) {
+  async findOne(id: string) {
     return await this.genreModel.findById(id).exec();
     // return await this.prisma.genre.findUnique({
     //   where: {
@@ -65,7 +65,7 @@ export class GenreService {
     // return await this.genreRepository.save(createGenreDto);
   }
 
-  async update(id: number, updateGenreDto: UpdateGenreDto) {
+  async update(id: string, updateGenreDto: UpdateGenreDto) {
     // const genre = await this.genreRepository.findOne({
     //   where: {
     //     id
@@ -103,7 +103,7 @@ export class GenreService {
     return newGenre;
   }
 
-  async remove(id: number) {
+  async remove(id: string) {
     // const genre = await this.genreRepository.findOne({
     //   where: {
     //     id
