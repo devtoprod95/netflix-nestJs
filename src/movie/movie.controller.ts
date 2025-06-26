@@ -64,7 +64,7 @@ export class MovieController {
     //     throw new BadRequestException('숫자를 입력하세요.');
     //   }
     // })) id: number
-    @Param('id', ParseIntPipe) id: number,
+    @Param('id') id: string,
     @Req() request: any,
   ) {
     const session = request.session;
@@ -75,8 +75,6 @@ export class MovieController {
       ...movieCount,
       [id]: movieCount[id] ? movieCount[id]+1 : 1
     }
-
-    console.log(session);
     
     return this.movieService.findOne(id)
   }
