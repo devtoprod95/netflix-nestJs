@@ -111,7 +111,7 @@ export class MovieService {
     //   .getMany();
   }
 
-  async findAll(dto: GetMoviesDto, userId?: number) {
+  async findAll(dto: GetMoviesDto, userId?: string) {
     const {title, cursor, take, order} = dto;
 
     const orderBy = order.reduce((acc, field) => {
@@ -179,7 +179,7 @@ export class MovieService {
 
       const likedMovies = movieIds.length < 1 ? [] : await this.movieUserLikeModel.find({
         movie: { $in: movieIds.map((id) => new Types.ObjectId(id.toString())) },
-        user: userId
+        user: new Types.ObjectId(userId)
       })
       .populate('movie')
       .exec();
@@ -497,7 +497,7 @@ export class MovieService {
     //   .addAndRemove(newGenres.map(genre => genre.id), movie.genres.map(genre => genre.id));
   }
 
-  async updateMongoose(id: number, updateMovieDto: UpdateMovieDto) {
+  async updateMongoose(id: string, updateMovieDto: UpdateMovieDto) {
     const session = await this.movieModel.startSession();
     session.startTransaction();
 
@@ -695,9 +695,9 @@ export class MovieService {
 
   // }
 
-  async remove(id: number) {
+  async remove(id: string) {
     const movie = await this.movieModel.findById(id)
-      .populate('movieDetail')
+      .populate('detail')
       .exec();
     // const movie = await this.prisma.movie.findUnique({
     //   where: { id },
@@ -741,7 +741,7 @@ export class MovieService {
   //     .execute();
   // }
 
-  async toggleMovieLike(movieId: number, userId: number, isLike: boolean, qr: QueryRunner) {
+  async toggleMovieLike(movieId: string, userId: string, isLike: boolean, qr: QueryRunner) {
     const movie = await this.movieModel.findById(movieId).exec();
     // const movie = await this.prisma.movie.findUnique({
     //   where: { id: movieId }
@@ -769,8 +769,8 @@ export class MovieService {
     }
     
     const likeRecord = await this.movieUserLikeModel.findOne({
-      movie: movieId,
-      user: userId
+      movie: new Types.ObjectId(movieId),
+      user: new Types.ObjectId(userId)
     }).exec();
     // const likeRecord = await this.prisma.movieUserLike.findUnique({
     //   where: {
@@ -817,8 +817,8 @@ export class MovieService {
       }
     } else {
       await this.movieUserLikeModel.create({
-        movie: movieId,
-        user: userId,
+        movie: new Types.ObjectId(movieId),
+        user: new Types.ObjectId(userId),
         isLike: isLike
       });
       // await this.prisma.movieUserLike.create({

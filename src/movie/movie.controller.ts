@@ -1,4 +1,4 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete, Query, UseInterceptors, ClassSerializerInterceptor, ParseIntPipe, BadRequestException, UseGuards, Request, UploadedFile, UploadedFiles, Req } from '@nestjs/common';
+import { Controller, Get, Post, Body, Patch, Param, Delete, Query, UseInterceptors, ClassSerializerInterceptor, BadRequestException, UseGuards, Request, UploadedFile, UploadedFiles, Req } from '@nestjs/common';
 import { MovieService } from './movie.service';
 import { CreateMovieDto } from './dto/create-movie.dto';
 import { UpdateMovieDto } from './dto/update-movie.dto';
@@ -41,7 +41,7 @@ export class MovieController {
   })
   getMovies(
     @Query() dto: GetMoviesDto,
-    @UserId() userId: number
+    @UserId() userId: string
   ) {
     return this.movieService.findAll(dto, userId);
   }
@@ -51,7 +51,7 @@ export class MovieController {
   @UseInterceptors(CI) // URL 기반으로 캐싱
   getRecentMovies(
     @Query() dto: GetMoviesDto,
-    @UserId() userId: number
+    @UserId() userId: string
   ) {
     return this.movieService.findRecent();
   }
@@ -103,7 +103,7 @@ export class MovieController {
   @Patch(':id')
   @RBAC(Role.admin)
   patchMovie(
-    @Param('id', ParseIntPipe) id: number,
+    @Param('id') id: string,
     @Body() body: UpdateMovieDto
   ) {
     return this.movieService.updateMongoose(id, body);
@@ -112,7 +112,7 @@ export class MovieController {
   @Delete(':id')
   @RBAC(Role.admin)
   deleteMovie(
-    @Param('id', ParseIntPipe) id: number
+    @Param('id') id: string
   ) {
     return this.movieService.remove(id);
   }
@@ -120,8 +120,8 @@ export class MovieController {
   @Post(':id/like')
   @UseInterceptors(TransactionInterceptor)
   createMovieLike(
-    @Param('id', ParseIntPipe) movieId: number,
-    @UserId() userId: number,
+    @Param('id') movieId: string,
+    @UserId() userId: string,
     @QueryRunner() queryRunner: QR,
   ) {
     return this.movieService.toggleMovieLike(movieId, userId, true, queryRunner);
@@ -130,8 +130,8 @@ export class MovieController {
   @Post(':id/dislike')
   @UseInterceptors(TransactionInterceptor)
   createMovieDisLike(
-    @Param('id', ParseIntPipe) movieId: number,
-    @UserId() userId: number,
+    @Param('id') movieId: string,
+    @UserId() userId: string,
     @QueryRunner() queryRunner: QR,
   ) {
     return this.movieService.toggleMovieLike(movieId, userId, false, queryRunner);
